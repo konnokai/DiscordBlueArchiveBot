@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  discord-blue-archive-bot:
+    build: .
+    volumes:
+      - ./Data:/app/Data
+      - ./bot_config.json:/app/bot_config.json
+    restart: unless-stopped
