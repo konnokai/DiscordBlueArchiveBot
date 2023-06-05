@@ -1,4 +1,4 @@
- <Project Sdk="Microsoft.NET.Sdk">
+﻿ <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -25,5 +25,15 @@
     <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.5" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.111" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Discord" />
+    <Using Include="Discord.WebSocket" />
+    <Using Include="Newtonsoft.Json" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <SourceRevisionId>build$([System.DateTime]::UtcNow.AddHours(8).ToString("yyyy/MM/dd HH:mm:ss"))</SourceRevisionId>
+  </PropertyGroup>
 
 </Project>
