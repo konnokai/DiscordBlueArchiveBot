@@ -58,17 +58,25 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         }
                     }
 
-                    if (jpLocalizations.Data["EventName"].TryGetValue(jpCurrentRegionsData.CurrentEvents[0].Event.ToString(), out string jpNowEventName))
+                    foreach (var item in jpCurrentRegionsData.CurrentEvents)
                     {
-                        Log.Info($"JP Now Event Name: {jpNowEventName}");
-                    }
-                    else if (stages.Events.Any((x) => x.EventId == jpCurrentRegionsData.CurrentEvents[0].Event))
-                    {
-                        Log.Info($"JP Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == jpCurrentRegionsData.CurrentEvents[0].Event).NameJp}");
-                    }
+                        if (jpLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out string jpNowEventName))
+                        {
+                            Log.Info($"JP Now Event Name: {jpNowEventName}");
+                        }
+                        else if (stages.Events.Any((x) => x.EventId == item.Event))
+                        {
+                            Log.Info($"JP Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameJp}");
+                        }
+                        else
+                        {
+                            Log.Warn($"JP No Event Name: {item.Event}");
+                            continue;
+                        }
 
-                    Log.Info($"JP Now Event Start At: {ConvertTimestampToDatetime(jpCurrentRegionsData.CurrentEvents[0].Start)}");
-                    Log.Info($"JP Now Event End At: {ConvertTimestampToDatetime(jpCurrentRegionsData.CurrentEvents[0].End)}");
+                        Log.Info($"JP Now Event Start At: {ConvertTimestampToDatetime(item.Start)}");
+                        Log.Info($"JP Now Event End At: {ConvertTimestampToDatetime(item.End)}");
+                    }
                 }
 
                 var globalCurrentRegionsData = common.Regions.FirstOrDefault((x) => x.Name == "global");
@@ -95,17 +103,25 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         }
                     }
 
-                    if (twLocalizations.Data["EventName"].TryGetValue(globalCurrentRegionsData.CurrentEvents[0].Event.ToString(), out string globalNowEventName))
+                    foreach (var item in globalCurrentRegionsData.CurrentEvents)
                     {
-                        Log.Info($"Global Now Event Name: {globalNowEventName}");
-                    }
-                    else if (stages.Events.Any((x) => x.EventId == globalCurrentRegionsData.CurrentEvents[0].Event))
-                    {
-                        Log.Info($"Global Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == globalCurrentRegionsData.CurrentEvents[0].Event).NameTw}");
-                    }
+                        if (twLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out string globalNowEventName))
+                        {
+                            Log.Info($"Global Now Event Name: {globalNowEventName}");
+                        }
+                        else if (stages.Events.Any((x) => x.EventId == item.Event))
+                        {
+                            Log.Info($"Global Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameTw}");
+                        }
+                        else
+                        {
+                            Log.Warn($"Global No Event Name: {item.Event}");
+                            continue;
+                        }
 
-                    Log.Info($"Global Now Event Start At: {ConvertTimestampToDatetime(globalCurrentRegionsData.CurrentEvents[0].Start)}");
-                    Log.Info($"Global Now Event End At: {ConvertTimestampToDatetime(globalCurrentRegionsData.CurrentEvents[0].End)}");
+                        Log.Info($"Global Now Event Start At: {ConvertTimestampToDatetime(item.Start)}");
+                        Log.Info($"Global Now Event End At: {ConvertTimestampToDatetime(globalCurrentRegionsData.CurrentEvents[0].End)}");
+                    }
                 }
             }
             catch (Exception ex)

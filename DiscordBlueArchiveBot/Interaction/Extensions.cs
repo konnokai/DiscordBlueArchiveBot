@@ -1,6 +1,7 @@
 ﻿using DiscordBlueArchiveBot.Interaction;
 using Microsoft.Extensions.DependencyInjection;
 using System.Data;
+using System.Reactive;
 using System.Reflection;
 
 namespace DiscordBlueArchiveBot.Interaction
