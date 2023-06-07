@@ -98,6 +98,7 @@ namespace DiscordBlueArchiveBot
             };
             #endregion
 
+#if DEBUG || RELEASE
             Log.Info("登入中...");
             await _client.LoginAsync(TokenType.Bot, botConfig.DiscordToken);
             await _client.StartAsync();
@@ -108,6 +109,7 @@ namespace DiscordBlueArchiveBot
             Log.Info("登入成功!");
 
             UptimeKumaClient.Init(botConfig.UptimeKumaPushUrl, _client);
+#endif
 
             #region 初始化互動指令系統
             var interactionServices = new ServiceCollection()
@@ -129,6 +131,13 @@ namespace DiscordBlueArchiveBot
             IServiceProvider iService = interactionServices.BuildServiceProvider();
             await iService.GetService<InteractionHandler>().InitializeAsync();
             #endregion
+
+#if DEBUG_API
+            do { await Task.Delay(200); }
+            while (!isDisconnect);
+
+            return;
+#endif
 
             #region 註冊互動指令
             try
