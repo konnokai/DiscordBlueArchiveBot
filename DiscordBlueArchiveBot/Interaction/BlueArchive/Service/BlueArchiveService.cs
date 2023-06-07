@@ -34,21 +34,88 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 jpRaids = await GetDataFromServerAsync<RaidsJson>("jp");
                 jpLocalizations = await GetDataFromServerAsync<LocalizationJson>("jp");
 
-                var jpNowRaidId = common.Regions.FirstOrDefault((x) => x.Name == "jp").CurrentRaid[0].Raid;
-                var jpNowEventId = common.Regions.FirstOrDefault((x) => x.Name == "jp").CurrentEvents[0].Event;
-                Log.Info($"JP Now Raid Name: {jpRaids.Raids.FirstOrDefault((x) => x.Id == jpNowRaidId).Name}");
-                Log.Info($"JP Now Event Name: {jpLocalizations.Data["EventName"][jpNowEventId.ToString()]}");
+                var jpCurrentRegionsData = common.Regions.FirstOrDefault((x) => x.Name == "jp");
+                if (jpCurrentRegionsData != null)
+                {
+                    foreach (var item in jpCurrentRegionsData.CurrentRaid)
+                    {
+                        var jpNowRaidData = jpRaids.Raids.FirstOrDefault((x) => x.Id == item.Raid);
+                        if (jpNowRaidData != null)
+                        {
+                            Log.Info($"JP Now Raid Name: {jpNowRaidData.Name}");
+                            Log.Info($"JP Now Raid Start At: {ConvertTimestampToDatetime(item.Start)}");
+                            Log.Info($"JP Now Raid End At: {ConvertTimestampToDatetime(item.End)}");
+                        }
+                        else if (jpRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
+                        {
+                            var timeAttack = jpRaids.TimeAttacks.FirstOrDefault((x) => x.Id == item.Raid);
+                            if (jpLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
+                            {
+                                Log.Info($"JP Now TimeAttacks Name: {timeAttackName}");
+                                Log.Info($"JP Now TimeAttacks Start At: {ConvertTimestampToDatetime(item.Start)}");
+                                Log.Info($"JP Now TimeAttacks End At: {ConvertTimestampToDatetime(item.End)}");
+                            }
+                        }
+                    }
 
-                var globalNowRaidId = common.Regions.FirstOrDefault((x) => x.Name == "global").CurrentRaid[0].Raid;
-                var globalNowEventId = common.Regions.FirstOrDefault((x) => x.Name == "global").CurrentEvents[0].Event;
-                Log.Info($"Global Now Raid Name: {twRaids.Raids.FirstOrDefault((x) => x.Id == globalNowRaidId).Name}");
-                Log.Info($"Global Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == globalNowEventId).NameTw}");
+                    if (jpLocalizations.Data["EventName"].TryGetValue(jpCurrentRegionsData.CurrentEvents[0].Event.ToString(), out string jpNowEventName))
+                    {
+                        Log.Info($"JP Now Event Name: {jpNowEventName}");
+                    }
+                    else if (stages.Events.Any((x) => x.EventId == jpCurrentRegionsData.CurrentEvents[0].Event))
+                    {
+                        Log.Info($"JP Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == jpCurrentRegionsData.CurrentEvents[0].Event).NameJp}");
+                    }
+
+                    Log.Info($"JP Now Event Start At: {ConvertTimestampToDatetime(jpCurrentRegionsData.CurrentEvents[0].Start)}");
+                    Log.Info($"JP Now Event End At: {ConvertTimestampToDatetime(jpCurrentRegionsData.CurrentEvents[0].End)}");
+                }
+
+                var globalCurrentRegionsData = common.Regions.FirstOrDefault((x) => x.Name == "global");
+                if (globalCurrentRegionsData != null)
+                {
+                    foreach (var item in globalCurrentRegionsData.CurrentRaid)
+                    {
+                        var globalNowRaidData = twRaids.Raids.FirstOrDefault((x) => x.Id == item.Raid);
+                        if (globalNowRaidData != null)
+                        {
+                            Log.Info($"Global Now Raid Name: {globalNowRaidData.Name}");
+                            Log.Info($"Global Now Raid Start At: {ConvertTimestampToDatetime(item.Start)}");
+                            Log.Info($"Global Now Raid End At: {ConvertTimestampToDatetime(item.End)}");
+                        }
+                        else if (twRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
+                        {
+                            var timeAttack = twRaids.TimeAttacks.FirstOrDefault((x) => x.Id == item.Raid);
+                            if (twLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
+                            {
+                                Log.Info($"Global Now TimeAttacks Name: {timeAttackName}");
+                                Log.Info($"Global Now TimeAttacks Start At: {ConvertTimestampToDatetime(item.Start)}");
+                                Log.Info($"Global Now TimeAttacks End At: {ConvertTimestampToDatetime(item.End)}");
+                            }
+                        }
+                    }
+
+                    if (twLocalizations.Data["EventName"].TryGetValue(globalCurrentRegionsData.CurrentEvents[0].Event.ToString(), out string globalNowEventName))
+                    {
+                        Log.Info($"Global Now Event Name: {globalNowEventName}");
+                    }
+                    else if (stages.Events.Any((x) => x.EventId == globalCurrentRegionsData.CurrentEvents[0].Event))
+                    {
+                        Log.Info($"Global Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == globalCurrentRegionsData.CurrentEvents[0].Event).NameTw}");
+                    }
+
+                    Log.Info($"Global Now Event Start At: {ConvertTimestampToDatetime(globalCurrentRegionsData.CurrentEvents[0].Start)}");
+                    Log.Info($"Global Now Event End At: {ConvertTimestampToDatetime(globalCurrentRegionsData.CurrentEvents[0].End)}");
+                }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "RefreshDataAsync");
             }
         }
+
+        private DateTime ConvertTimestampToDatetime(int? timestamp)
+        => new DateTime(1970, 1, 1, 0, 0, 0).AddHours(8).AddSeconds(timestamp.Value);
 
         private async Task<T> GetDataFromServerAsync<T>(string localization = "") where T : IJson, new()
         {
