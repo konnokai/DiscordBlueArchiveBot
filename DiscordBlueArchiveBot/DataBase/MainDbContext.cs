@@ -6,8 +6,8 @@ namespace DiscordBlueArchiveBot.DataBase
 {
     public class MainDbContext : DbContext
     {
-        public DbSet<GuildConfig> GuildConfig { get; set; }
-        public DbSet<ChannelConfig> ChannelConfig { get; set; }
+        public DbSet<NotifyConfig> NotifyConfig { get; set; }
+        public DbSet<CafeInviteTicketUpdateTime> CafeInviteTicketUpdateTime { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite($"Data Source={Program.GetDataFilePath("DataBase.db")}")
