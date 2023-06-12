@@ -14,7 +14,7 @@ namespace DiscordBlueArchiveBot.DataBase.Table
             Raid = 2,
             [ChoiceDisplay("綜合戰術考試")]
             UnionOperation = 3,
-            [ChoiceDisplay("晚上登入")] // 固定 18. 更新
+            [ChoiceDisplay("晚上登入")] // 固定 17. 更新
             NightLogin = 4,
             [ChoiceDisplay("PVP獎勵")] // 固定 13. 更新
             PVPAward = 5,

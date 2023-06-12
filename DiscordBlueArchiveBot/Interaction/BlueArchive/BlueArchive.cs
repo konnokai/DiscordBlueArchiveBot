@@ -1,5 +1,6 @@
 ﻿using Discord.Interactions;
 using DiscordBlueArchiveBot.DataBase.Table;
+using DiscordBlueArchiveBot.Interaction.Attribute;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
 
@@ -14,9 +15,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             _client = client;
         }
 
-        [RequireBotPermission(ChannelPermission.SendMessages | ChannelPermission.EmbedLinks | ChannelPermission.MentionEveryone)]
-        [RequireUserPermission(GuildPermission.Administrator)]
         [SlashCommand("set-notify", "設定要通知的類型")]
+        [CommandSummary("若設定 `全部` 通知，則會將除了 `咖啡廳邀請券更新` 外的全部通知都設定\n" +
+            "`咖啡廳邀請券更新` 採單獨通知設計，設定後 20 小時會通知一次並移除本通知，需重新設定")]
         public async Task SetNotify([Summary("遊戲版本")] RegionType regionType, [Summary("通知類型")] NotifyType notifyType)
         {
             await DeferAsync(true);
