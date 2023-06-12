@@ -84,7 +84,7 @@ namespace DiscordBlueArchiveBot.Interaction
         {
             string slashCommand = $"/{arg1}";
             var commandData = arg2.Interaction.Data as SocketSlashCommandData;
-            if (commandData.Options.Count > 0) slashCommand += GetOptionsValue(commandData.Options.First());
+            if (commandData!.Options.Count > 0) slashCommand += $" {string.Join(' ', commandData.Options.Select((x) => x.Value))}";
 
             if (arg3.IsSuccess)
             {
@@ -111,22 +111,6 @@ namespace DiscordBlueArchiveBot.Interaction
                         await arg2.Interaction.SendErrorAsync("未知的錯誤，請向Bot擁有者回報");
                         break;
                 }
-            }
-        }
-
-        private string GetOptionsValue(SocketSlashCommandDataOption socketSlashCommandDataOption)
-        {
-            try
-            {
-                if (socketSlashCommandDataOption.Type != ApplicationCommandOptionType.SubCommand && socketSlashCommandDataOption.Type != ApplicationCommandOptionType.SubCommandGroup && !socketSlashCommandDataOption.Options.Any())
-                    return $" {socketSlashCommandDataOption.Value}";
-
-                if (socketSlashCommandDataOption.Type == ApplicationCommandOptionType.SubCommand || socketSlashCommandDataOption.Type == ApplicationCommandOptionType.SubCommandGroup) GetOptionsValue(socketSlashCommandDataOption.Options.First());
-                return " " + string.Join(' ', socketSlashCommandDataOption.Options.Select(option => option.Value));
-            }
-            catch (Exception)
-            {
-                return "";
             }
         }
     }
