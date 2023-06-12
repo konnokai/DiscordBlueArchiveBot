@@ -6,6 +6,8 @@ public class BotConfig
     public string RedisOption { get; set; } = "127.0.0.1,syncTimeout=3000";
     public ulong TestSlashCommandGuildId { get; set; } = default;
     public string? WebHookUrl { get; set; } = default;
+
+    [NotRequirement]
     public string? UptimeKumaPushUrl { get; set; } = default;
 
     public void InitBotConfig()
@@ -18,7 +20,7 @@ public class BotConfig
             {
                 bool exitIfNoVar = false;
                 object? origValue = item.GetValue(this);
-                if (origValue == default) exitIfNoVar = true;
+                if (origValue == default && item.GetCustomAttributes(typeof(NotRequirementAttribute), false).Length == 0) exitIfNoVar = true;
 
                 object? setValue = Utility.GetEnvironmentVariable(item.Name, item.PropertyType, exitIfNoVar);
                 setValue ??= origValue;
@@ -70,4 +72,8 @@ public class BotConfig
             }
         }
     }
+
+    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+    sealed class NotRequirementAttribute : Attribute
+    { }
 }
