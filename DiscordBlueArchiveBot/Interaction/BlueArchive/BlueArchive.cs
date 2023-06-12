@@ -9,8 +9,6 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 {
     public class BlueArchive : TopLevelModule<BlueArchiveService>
     {
-        private readonly DiscordSocketClient _client;
-
         public class NotifyConfigAutocompleteHandler : AutocompleteHandler
         {
             public override async Task<AutocompletionResult> GenerateSuggestionsAsync(IInteractionContext context, IAutocompleteInteraction autocompleteInteraction, IParameterInfo parameter, IServiceProvider services)
@@ -67,11 +65,6 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     return AutocompletionResult.FromSuccess();
                 }
             }
-        }
-
-        public BlueArchive(DiscordSocketClient client)
-        {
-            _client = client;
         }
 
         [SlashCommand("set-notify", "設定通知")]
