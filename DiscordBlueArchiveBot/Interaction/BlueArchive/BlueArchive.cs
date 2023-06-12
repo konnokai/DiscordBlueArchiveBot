@@ -2,6 +2,7 @@
 using DiscordBlueArchiveBot.DataBase.Table;
 using DiscordBlueArchiveBot.Interaction.Attribute;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
+using Microsoft.EntityFrameworkCore;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive
@@ -9,6 +10,64 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
     public class BlueArchive : TopLevelModule<BlueArchiveService>
     {
         private readonly DiscordSocketClient _client;
+
+        public class NotifyConfigAutocompleteHandler : AutocompleteHandler
+        {
+            public override async Task<AutocompletionResult> GenerateSuggestionsAsync(IInteractionContext context, IAutocompleteInteraction autocompleteInteraction, IParameterInfo parameter, IServiceProvider services)
+            {
+                using var db = DataBase.MainDbContext.GetDbContext();
+                IQueryable<NotifyConfig> notifyConfigs;
+
+                if (!db.NotifyConfig.AsNoTracking().Any((x) => x.UserId == autocompleteInteraction.User.Id))
+                    return AutocompletionResult.FromSuccess();
+
+                notifyConfigs = db.NotifyConfig.AsNoTracking().Where((x) => x.UserId == autocompleteInteraction.User.Id);
+
+                try
+                {
+                    List<AutocompleteResult> results = new();
+                    foreach (var item in notifyConfigs)
+                    {
+                        results.Add(new AutocompleteResult($"({item.RegionTypeId}) {item.NotifyTypeId}", $"{(int)item.RegionTypeId}:{(int)item.NotifyTypeId}"));
+                    }
+                    return AutocompletionResult.FromSuccess(results.Take(25));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.ToString());
+                    return AutocompletionResult.FromSuccess();
+                }
+            }
+        }
+
+        public class CafeInviteTicketUpdateConfigAutocompleteHandler : AutocompleteHandler
+        {
+            public override async Task<AutocompletionResult> GenerateSuggestionsAsync(IInteractionContext context, IAutocompleteInteraction autocompleteInteraction, IParameterInfo parameter, IServiceProvider services)
+            {
+                try
+                {
+                    using var db = DataBase.MainDbContext.GetDbContext();
+                IQueryable<CafeInviteTicketUpdateTime> cafeInviteTicketUpdateTimes;
+
+                if (!db.CafeInviteTicketUpdateTime.AsNoTracking().Any((x) => x.UserId == autocompleteInteraction.User.Id))
+                    return AutocompletionResult.FromSuccess();
+
+                cafeInviteTicketUpdateTimes = db.CafeInviteTicketUpdateTime.AsNoTracking().Where((x) => x.UserId == autocompleteInteraction.User.Id);
+
+                    List<AutocompleteResult> results = new();
+                    foreach (var item in cafeInviteTicketUpdateTimes)
+                    {
+                        results.Add(new AutocompleteResult($"{item.RegionTypeId}", (int)item.RegionTypeId));
+                    }
+                    return AutocompletionResult.FromSuccess(results.Take(5));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.ToString());
+                    return AutocompletionResult.FromSuccess();
+                }
+            }
+        }
 
         public BlueArchive(DiscordSocketClient client)
         {
@@ -95,6 +154,23 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             }
         }
 
+        [SlashCommand("cancel-notify", "取消通知")]
+        public async Task CancelNotify([Summary("通知設定"), Autocomplete(typeof(NotifyConfigAutocompleteHandler))] string config)
+        {
+            await DeferAsync(true);
+
+            using (var db = DataBase.MainDbContext.GetDbContext())
+            {
+                string[] array = config.Split(':');
+                RegionType regionType = (RegionType)int.Parse(array[0]);
+                NotifyType notifyType = (NotifyType)int.Parse(array[1]);
+                db.NotifyConfig.Remove(db.NotifyConfig.Single((x) => x.RegionTypeId == regionType && x.NotifyTypeId == notifyType));
+                await db.SaveChangesAsync();
+
+                await Context.Interaction.SendConfirmAsync("已移除", true);
+            }
+        }
+
         [SlashCommand("set-ticket-update-notify", "設定咖啡廳邀請券更新通知")]
         [CommandSummary("`咖啡廳邀請券更新` 採單獨通知設計，設定後 20 小時會通知一次並移除本通知，需重新設定")]
         public async Task SetCafeInviteTicketUpdateNotify([Summary("遊戲版本")] RegionType regionType)
@@ -139,6 +215,20 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 await db.SaveChangesAsync();
 
                 await Context.Interaction.SendConfirmAsync($"已設定通知", true, true);
+            }
+        }
+
+        [SlashCommand("cancel-ticket-update-notify", "取消咖啡廳邀請券更新通知")]
+        public async Task CancelCafeInviteTicketUpdateNotify([Summary("通知設定"), Autocomplete(typeof(CafeInviteTicketUpdateConfigAutocompleteHandler))] int region)
+        {
+            await DeferAsync(true);
+
+            using (var db = DataBase.MainDbContext.GetDbContext())
+            {
+                db.CafeInviteTicketUpdateTime.Remove(db.CafeInviteTicketUpdateTime.Single((x) => x.RegionTypeId == (RegionType)region));
+                await db.SaveChangesAsync();
+
+                await Context.Interaction.SendConfirmAsync("已移除", true);
             }
         }
     }
