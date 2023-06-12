@@ -16,7 +16,7 @@ namespace DiscordBlueArchiveBot.Interaction
                 .WithButton("是", $"{guid}-yes", ButtonStyle.Success)
                 .WithButton("否", $"{guid}-no", ButtonStyle.Danger);
 
-            await FollowupAsync(embed: embed.Build(), components: component.Build(), ephemeral: true).ConfigureAwait(false);
+            var message = await FollowupAsync(embed: embed.Build(), components: component.Build(), ephemeral: true).ConfigureAwait(false);
 
             try
             {
@@ -25,6 +25,10 @@ namespace DiscordBlueArchiveBot.Interaction
             }
             finally
             {
+                await ModifyOriginalResponseAsync((x) => x.Components = new ComponentBuilder()
+                                 .WithButton("是", $"{guid}-yes", ButtonStyle.Success, disabled: true)
+                                 .WithButton("否", $"{guid}-no", ButtonStyle.Danger, disabled: true).Build())
+                             .ConfigureAwait(false);
             }
         }
 
@@ -36,7 +40,7 @@ namespace DiscordBlueArchiveBot.Interaction
             {
                 Context.Client.ButtonExecuted += ButtonExecuted;
 
-                if ((await Task.WhenAny(userInputTask.Task, Task.Delay(5000)).ConfigureAwait(false)) != userInputTask.Task)
+                if ((await Task.WhenAny(userInputTask.Task, Task.Delay(30000)).ConfigureAwait(false)) != userInputTask.Task)
                 {
                     return false;
                 }
@@ -63,15 +67,11 @@ namespace DiscordBlueArchiveBot.Interaction
                         return Task.CompletedTask;
                     }
 
-                    if (userInputTask.TrySetResult(component.Data.CustomId.EndsWith("yes")))
-                    {
-                        await component.UpdateAsync((x) => x.Components = new ComponentBuilder()
-                            .WithButton("是", $"{guid}-yes", ButtonStyle.Success, disabled: true)
-                            .WithButton("否", $"{guid}-no", ButtonStyle.Danger, disabled: true).Build())
-                        .ConfigureAwait(false);
-                    }
+                    await component.DeferAsync(true);
+                    userInputTask.TrySetResult(component.Data.CustomId.EndsWith("yes"));
                     return Task.CompletedTask;
                 });
+
                 return Task.CompletedTask;
             }
         }
