@@ -8,7 +8,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
     {
         private readonly DiscordSocketClient _client;
         private readonly HttpClient _httpClient;
-        private readonly Timer _timer;
+        private readonly Timer _refreshTimer, _notifyCafeInviteTicketUpdateTimer;
         private CommonJson common = null;
         private StagesJson stages = null;
         private RaidsJson jpRaids = null;
@@ -20,7 +20,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         {
             _client = client;
             _httpClient = httpClientFactory.CreateClient();
-            _timer = new Timer(new TimerCallback(async (obj) => await RefreshDataAsync()), null, TimeSpan.FromSeconds(1), TimeSpan.FromHours(1));
+            _refreshTimer = new Timer(new TimerCallback(async (obj) => await RefreshDataAsync()), null, TimeSpan.FromSeconds(10), TimeSpan.FromHours(1));
+            _notifyCafeInviteTicketUpdateTimer = new Timer(new TimerCallback(async (obj) => await NotifyCafeInviteTicketUpdate()), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
         }
 
         private async Task RefreshDataAsync()
@@ -127,6 +128,34 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             catch (Exception ex)
             {
                 Log.Error(ex, "RefreshDataAsync");
+            }
+        }
+
+        private async Task NotifyCafeInviteTicketUpdate()
+        {
+            using (var db = DataBase.MainDbContext.GetDbContext())
+            {
+                foreach (var item in db.CafeInviteTicketUpdateTime.Where((x) => x.NotifyDateTime <= DateTime.Now))
+                {
+                    try
+                    {
+                        var user = await _client.Rest.GetUserAsync(item.UserId);
+                        if (user != null)
+                        {
+                            var channel = await user.CreateDMChannelAsync();
+                            await channel.SendMessageAsync(item.RegionTypeId == DataBase.Table.NotifyConfig.RegionType.Japan ? "日版" : "國際版" + $"的咖啡廳邀請券已更新!");
+                        }
+                    }
+                    catch (Discord.Net.HttpException discordEx) when (discordEx.DiscordCode != null)
+                    {
+                        Log.Error(discordEx, $"發送邀請券更新通知失敗: {item.UserId}");
+                    }
+                    finally
+                    {
+                        db.CafeInviteTicketUpdateTime.Remove(item);
+                        await db.SaveChangesAsync();
+                    }
+                }
             }
         }
 
