@@ -87,7 +87,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     try
                     {
                         var channel = await Context.User.CreateDMChannelAsync();
-                        await channel.SendMessageAsync("這是測試用的訊息，僅會在第一次設定通知的時候出現，用來確定是否能發送通知\n" +
+                        await channel.SendMessageAsync("這是測試用的訊息，用來確定是否能發送通知\n" +
                             "請勿關閉你與機器人任意共通伺服器的 `私人訊息` 設定，避免未來無法接收機器人的訊息");
                     }
                     catch (Discord.Net.HttpException discordEx) when (discordEx.DiscordCode == DiscordErrorCode.MissingPermissions)
@@ -184,7 +184,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     try
                     {
                         var channel = await Context.User.CreateDMChannelAsync();
-                        await channel.SendMessageAsync("這是測試用的訊息，僅會在第一次設定通知的時候出現，用來確定是否能發送通知\n" +
+                        await channel.SendMessageAsync("這是測試用的訊息，用來確定是否能發送通知\n" +
                             "請勿關閉你與機器人任意共通伺服器的 `私人訊息` 設定，避免未來無法接收機器人的訊息");
                     }
                     catch (Discord.Net.HttpException discordEx) when (discordEx.DiscordCode == DiscordErrorCode.MissingPermissions)

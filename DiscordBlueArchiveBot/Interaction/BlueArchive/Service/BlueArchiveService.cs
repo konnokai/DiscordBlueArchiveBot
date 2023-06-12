@@ -139,6 +139,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 {
                     try
                     {
+                        Log.Info($"向 {item.UserId} 發送 {item.RegionTypeId} 邀請券更新通知");
+
                         var user = await _client.Rest.GetUserAsync(item.UserId);
                         if (user != null)
                         {
