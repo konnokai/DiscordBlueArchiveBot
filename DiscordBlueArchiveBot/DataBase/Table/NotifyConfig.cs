@@ -20,8 +20,6 @@ namespace DiscordBlueArchiveBot.DataBase.Table
             PVPAward = 5,
             [ChoiceDisplay("咖啡廳換人")] // 固定 03. & 15. 更新
             CafeInterviewChange = 6,
-            [ChoiceDisplay("咖啡廳邀請券更新")] // 設定後過 20 小時提醒
-            CafeInviteTicketUpdate = 7,
         }
 
         public enum RegionType

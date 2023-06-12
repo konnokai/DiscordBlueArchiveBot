@@ -15,9 +15,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             _client = client;
         }
 
-        [SlashCommand("set-notify", "設定要通知的類型")]
-        [CommandSummary("若設定 `全部` 通知，則會將除了 `咖啡廳邀請券更新` 外的全部通知都設定\n" +
-            "`咖啡廳邀請券更新` 採單獨通知設計，設定後 20 小時會通知一次並移除本通知，需重新設定")]
+        [SlashCommand("set-notify", "設定通知")]
+        [CommandSummary("若設定 `全部` 通知，則會將除了 `咖啡廳邀請券更新` 外的全部通知都設定")]
         public async Task SetNotify([Summary("遊戲版本")] RegionType regionType, [Summary("通知類型")] NotifyType notifyType)
         {
             await DeferAsync(true);
@@ -92,32 +91,54 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                             await Context.Interaction.SendConfirmAsync($"已設定通知", true, true);
                             break;
                         }
-                    case NotifyType.CafeInviteTicketUpdate:
-                        {
-                            CafeInviteTicketUpdateTime? cafeInviteTicketUpdateTime;
-                            if ((cafeInviteTicketUpdateTime = db.CafeInviteTicketUpdateTime.SingleOrDefault((x) => x.UserId == Context.User.Id && x.RegionTypeId == regionType)) != null)
-                            {
-                                if (await PromptUserConfirmAsync("你已設定此通知，要更新時間嗎?"))
-                                {
-                                    cafeInviteTicketUpdateTime.NotifyDateTime = DateTime.Now.AddHours(20);
-                                    db.CafeInviteTicketUpdateTime.Update(cafeInviteTicketUpdateTime);
-                                }
-                                else
-                                {
-                                    return;
-                                }
-                            }
-                            else
-                            {
-                                db.CafeInviteTicketUpdateTime.Add(new CafeInviteTicketUpdateTime() { UserId = Context.User.Id, RegionTypeId = regionType, NotifyDateTime = DateTime.Now.AddHours(20) });
-                            }
-
-                            await db.SaveChangesAsync();
-
-                            await Context.Interaction.SendConfirmAsync($"已設定通知", true, true);
-                            break;
-                        }
                 }
+            }
+        }
+
+        [SlashCommand("set-ticket-update-notify", "設定咖啡廳邀請券更新通知")]
+        [CommandSummary("`咖啡廳邀請券更新` 採單獨通知設計，設定後 20 小時會通知一次並移除本通知，需重新設定")]
+        public async Task SetCafeInviteTicketUpdateNotify([Summary("遊戲版本")] RegionType regionType)
+        {
+            await DeferAsync(true);
+
+            using (var db = DataBase.MainDbContext.GetDbContext())
+            {
+                if (!db.NotifyConfig.Any((x) => x.UserId == Context.User.Id) && !db.CafeInviteTicketUpdateTime.Any((x) => x.UserId == Context.User.Id))
+                {
+                    try
+                    {
+                        var channel = await Context.User.CreateDMChannelAsync();
+                        await channel.SendMessageAsync("這是測試用的訊息，僅會在第一次設定通知的時候出現，用來確定是否能發送通知\n" +
+                            "請勿關閉你與機器人任意共通伺服器的 `私人訊息` 設定，避免未來無法接收機器人的訊息");
+                    }
+                    catch (Discord.Net.HttpException discordEx) when (discordEx.DiscordCode == DiscordErrorCode.MissingPermissions)
+                    {
+                        await Context.Interaction.SendErrorAsync("無法發送私訊，請至本伺服器的 `隱私設定` 中開啟 `私人訊息`", true);
+                        return;
+                    }
+                }
+
+                CafeInviteTicketUpdateTime? cafeInviteTicketUpdateTime;
+                if ((cafeInviteTicketUpdateTime = db.CafeInviteTicketUpdateTime.SingleOrDefault((x) => x.UserId == Context.User.Id && x.RegionTypeId == regionType)) != null)
+                {
+                    if (await PromptUserConfirmAsync("你已設定此通知，要更新時間嗎?"))
+                    {
+                        cafeInviteTicketUpdateTime.NotifyDateTime = DateTime.Now.AddHours(20);
+                        db.CafeInviteTicketUpdateTime.Update(cafeInviteTicketUpdateTime);
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    db.CafeInviteTicketUpdateTime.Add(new CafeInviteTicketUpdateTime() { UserId = Context.User.Id, RegionTypeId = regionType, NotifyDateTime = DateTime.Now.AddHours(20) });
+                }
+
+                await db.SaveChangesAsync();
+
+                await Context.Interaction.SendConfirmAsync($"已設定通知", true, true);
             }
         }
     }
