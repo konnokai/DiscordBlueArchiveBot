@@ -227,7 +227,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 {
                     Log.Info($"向 {item.UserId} 發送 {item.RegionTypeId} 邀請券更新通知");
 
-                    await _client.SendMessageToDMChannel(item.UserId, item.RegionTypeId == NotifyConfig.RegionType.Japan ? "日版" : "國際版" + $"的咖啡廳邀請券已更新!");
+                    await _client.SendMessageToDMChannel(item.UserId, (item.RegionTypeId == NotifyConfig.RegionType.Japan ? "日版" : "國際版") + $"的咖啡廳邀請券已更新!");
 
                     db.CafeInviteTicketUpdateTime.Remove(item);
                     await db.SaveChangesAsync();
