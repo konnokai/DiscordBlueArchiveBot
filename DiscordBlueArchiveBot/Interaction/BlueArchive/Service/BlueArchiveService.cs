@@ -25,8 +25,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             _client = client;
             _httpClient = httpClientFactory.CreateClient();
             _refreshTimer = new Timer(new TimerCallback(async (obj) => await RefreshDataAsync()), null, TimeSpan.FromSeconds(1), TimeSpan.FromHours(1));
-            _notify = new Timer(new TimerCallback(async (obj) => await Notify()), null, TimeSpan.FromSeconds((long)Math.Round(Convert.ToDateTime($"{DateTime.Now.AddHours(1):yyyy/MM/dd HH:00:00}").Subtract(DateTime.Now).TotalSeconds + 3)), TimeSpan.FromHours(1));
-            _notifyCafeInviteTicketUpdateTimer = new Timer(new TimerCallback(async (obj) => await NotifyCafeInviteTicketUpdate()), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
+            _notify = new Timer(new TimerCallback(async (obj) => await NotifyAsync()), null, TimeSpan.FromSeconds((long)Math.Round(Convert.ToDateTime($"{DateTime.Now.AddHours(1):yyyy/MM/dd HH:00:00}").Subtract(DateTime.Now).TotalSeconds + 3)), TimeSpan.FromHours(1));
+            _notifyCafeInviteTicketUpdateTimer = new Timer(new TimerCallback(async (obj) => await NotifyCafeInviteTicketUpdateAsync()), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
         }
 
         private async Task RefreshDataAsync()
@@ -130,7 +130,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             }
         }
 
-        private async Task Notify()
+        private async Task NotifyAsync()
         {
             using (var db = DataBase.MainDbContext.GetDbContext())
             {
@@ -139,21 +139,21 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     // 咖啡廳換人
                     case 9:
                     case 15:
-                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.CafeInterviewChange).DistinctBy((x) => x.UserId))
+                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.CafeInterviewChange).Distinct((x) => x.UserId))
                         {
                             await _client.SendMessageToDMChannel(item.UserId, "咖啡廳已換人!");
                         }
                         break;
                     // PVP 獎勵
                     case 13:
-                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.PVPAward).DistinctBy((x) => x.UserId))
+                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.PVPAward).Distinct((x) => x.UserId))
                         {
                             await _client.SendMessageToDMChannel(item.UserId, "可以領PVP獎勵了!");
                         }
                         break;
                     // 晚上登入
                     case 17:
-                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.NightLogin).DistinctBy((x) => x.UserId))
+                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.NightLogin).Distinct((x) => x.UserId))
                         {
                             await _client.SendMessageToDMChannel(item.UserId, "記得登入領晚上送的體力!");
                         }
@@ -164,7 +164,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             // 日版
                             if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Event)).DistinctBy((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Event)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打日版活動!");
                                 }
@@ -172,7 +172,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                             if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Raid)).DistinctBy((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Raid)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打日版總力戰!");
                                 }
@@ -180,7 +180,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                             if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.TimeAttack)).DistinctBy((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.TimeAttack)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打日版協同!");
                                 }
@@ -189,7 +189,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             // 國際版
                             if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Event)).DistinctBy((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Event)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打國際版活動!");
                                 }
@@ -197,7 +197,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                             if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Raid)).DistinctBy((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Raid)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打國際版總力戰!");
                                 }
@@ -205,7 +205,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                             if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.TimeAttack)).DistinctBy((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.TimeAttack)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打國際版協同!");
                                 }
@@ -219,7 +219,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             }
         }
 
-        private async Task NotifyCafeInviteTicketUpdate()
+        private async Task NotifyCafeInviteTicketUpdateAsync()
         {
             using (var db = DataBase.MainDbContext.GetDbContext())
             {
