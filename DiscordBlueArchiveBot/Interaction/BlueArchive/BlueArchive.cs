@@ -45,12 +45,12 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 try
                 {
                     using var db = DataBase.MainDbContext.GetDbContext();
-                IQueryable<CafeInviteTicketUpdateTime> cafeInviteTicketUpdateTimes;
+                    IQueryable<CafeInviteTicketUpdateTime> cafeInviteTicketUpdateTimes;
 
-                if (!db.CafeInviteTicketUpdateTime.AsNoTracking().Any((x) => x.UserId == autocompleteInteraction.User.Id))
-                    return AutocompletionResult.FromSuccess();
+                    if (!db.CafeInviteTicketUpdateTime.AsNoTracking().Any((x) => x.UserId == autocompleteInteraction.User.Id))
+                        return AutocompletionResult.FromSuccess();
 
-                cafeInviteTicketUpdateTimes = db.CafeInviteTicketUpdateTime.AsNoTracking().Where((x) => x.UserId == autocompleteInteraction.User.Id);
+                    cafeInviteTicketUpdateTimes = db.CafeInviteTicketUpdateTime.AsNoTracking().Where((x) => x.UserId == autocompleteInteraction.User.Id);
 
                     List<AutocompleteResult> results = new();
                     foreach (var item in cafeInviteTicketUpdateTimes)
@@ -82,6 +82,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                         var channel = await Context.User.CreateDMChannelAsync();
                         await channel.SendMessageAsync("這是測試用的訊息，用來確定是否能發送通知\n" +
                             "請勿關閉你與機器人任意共通伺服器的 `私人訊息` 設定，避免未來無法接收機器人的訊息");
+                        await channel.CloseAsync();
                     }
                     catch (Discord.Net.HttpException discordEx) when (discordEx.DiscordCode == DiscordErrorCode.MissingPermissions)
                     {
@@ -179,6 +180,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                         var channel = await Context.User.CreateDMChannelAsync();
                         await channel.SendMessageAsync("這是測試用的訊息，用來確定是否能發送通知\n" +
                             "請勿關閉你與機器人任意共通伺服器的 `私人訊息` 設定，避免未來無法接收機器人的訊息");
+                        await channel.CloseAsync();
                     }
                     catch (Discord.Net.HttpException discordEx) when (discordEx.DiscordCode == DiscordErrorCode.MissingPermissions)
                     {
