@@ -24,6 +24,21 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 
             using (var db = DataBase.MainDbContext.GetDbContext())
             {
+                if (!db.NotifyConfig.Any((x) => x.UserId == Context.User.Id) && !db.CafeInviteTicketUpdateTime.Any((x) => x.UserId == Context.User.Id))
+                {
+                    try
+                    {
+                        var channel = await Context.User.CreateDMChannelAsync();
+                        await channel.SendMessageAsync("這是測試用的訊息，僅會在第一次設定通知的時候出現，用來確定是否能發送通知\n" +
+                            "請勿關閉你與機器人任意共通伺服器的 `私人訊息` 設定，避免未來無法接收機器人的訊息");
+                    }
+                    catch (Discord.Net.HttpException discordEx) when (discordEx.DiscordCode == DiscordErrorCode.MissingPermissions)
+                    {
+                        await Context.Interaction.SendErrorAsync("無法發送私訊，請至本伺服器的 `隱私設定` 中開啟 `私人訊息`", true);
+                        return;
+                    }
+                }
+
                 switch (notifyType)
                 {
                     case NotifyType.All:
