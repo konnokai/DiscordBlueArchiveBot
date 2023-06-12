@@ -112,9 +112,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                             await Context.Interaction.SendConfirmAsync($"已設定通知", true, true);
                             break;
                         }
-                    case NotifyType.Double:
+                    case NotifyType.Event:
                     case NotifyType.Raid:
-                    case NotifyType.UnionOperation:
+                    case NotifyType.TimeAttack:
                     case NotifyType.NightLogin:
                     case NotifyType.PVPAward:
                     case NotifyType.CafeInterviewChange:

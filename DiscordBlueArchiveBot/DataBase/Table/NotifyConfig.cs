@@ -8,17 +8,17 @@ namespace DiscordBlueArchiveBot.DataBase.Table
         {
             [ChoiceDisplay("全部")]
             All = 0,
-            [ChoiceDisplay("活動加倍")]
-            Double = 1,
-            [ChoiceDisplay("總力戰")]
+            [ChoiceDisplay("活動 (下午六點通知)")]
+            Event = 1,
+            [ChoiceDisplay("總力戰 (下午六點通知)")]
             Raid = 2,
-            [ChoiceDisplay("綜合戰術考試")]
-            UnionOperation = 3,
-            [ChoiceDisplay("晚上登入")] // 固定 17. 更新
+            [ChoiceDisplay("綜合戰術考試 (下午六點通知)")]
+            TimeAttack = 3,
+            [ChoiceDisplay("晚上登入 (下午五點通知)")] // 固定 17. 更新
             NightLogin = 4,
-            [ChoiceDisplay("PVP獎勵")] // 固定 13. 更新
+            [ChoiceDisplay("PVP獎勵 (下午一點通知)")] // 固定 13. 更新
             PVPAward = 5,
-            [ChoiceDisplay("咖啡廳換人")] // 固定 03. & 15. 更新
+            [ChoiceDisplay("咖啡廳換人 (早上九點及下午三點通知)")] // 固定 03. & 15. 更新
             CafeInterviewChange = 6,
         }
 
