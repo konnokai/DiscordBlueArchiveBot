@@ -43,18 +43,14 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         var jpNowRaidData = jpRaids.Raids.FirstOrDefault((x) => x.Id == item.Raid);
                         if (jpNowRaidData != null)
                         {
-                            Log.Info($"JP Now Raid Name: {jpNowRaidData.Name}");
-                            Log.Info($"JP Now Raid Start At: {ConvertTimestampToDatetime(item.Start)}");
-                            Log.Info($"JP Now Raid End At: {ConvertTimestampToDatetime(item.End)}");
+                            Log.Info($"JP Now Raid Name: {jpNowRaidData.Name} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                         }
                         else if (jpRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
                         {
                             var timeAttack = jpRaids.TimeAttacks.FirstOrDefault((x) => x.Id == item.Raid);
                             if (jpLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
                             {
-                                Log.Info($"JP Now TimeAttacks Name: {timeAttackName}");
-                                Log.Info($"JP Now TimeAttacks Start At: {ConvertTimestampToDatetime(item.Start)}");
-                                Log.Info($"JP Now TimeAttacks End At: {ConvertTimestampToDatetime(item.End)}");
+                                Log.Info($"JP Now TimeAttacks Name: {timeAttackName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                             }
                         }
                     }
@@ -63,20 +59,17 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     {
                         if (jpLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out string jpNowEventName))
                         {
-                            Log.Info($"JP Now Event Name: {jpNowEventName}");
+                            Log.Info($"JP Now Event Name: {jpNowEventName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                         }
                         else if (stages.Events.Any((x) => x.EventId == item.Event))
                         {
-                            Log.Info($"JP Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameJp}");
+                            Log.Info($"JP Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameJp} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                         }
                         else
                         {
-                            Log.Warn($"JP No Event Name: {item.Event}");
+                            Log.Warn($"JP No Event Name: {item.Event} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                             continue;
                         }
-
-                        Log.Info($"JP Now Event Start At: {ConvertTimestampToDatetime(item.Start)}");
-                        Log.Info($"JP Now Event End At: {ConvertTimestampToDatetime(item.End)}");
                     }
                 }
 
@@ -88,18 +81,14 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         var globalNowRaidData = twRaids.Raids.FirstOrDefault((x) => x.Id == item.Raid);
                         if (globalNowRaidData != null)
                         {
-                            Log.Info($"Global Now Raid Name: {globalNowRaidData.Name}");
-                            Log.Info($"Global Now Raid Start At: {ConvertTimestampToDatetime(item.Start)}");
-                            Log.Info($"Global Now Raid End At: {ConvertTimestampToDatetime(item.End)}");
+                            Log.Info($"Global Now Raid Name: {globalNowRaidData.Name} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                         }
                         else if (twRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
                         {
                             var timeAttack = twRaids.TimeAttacks.FirstOrDefault((x) => x.Id == item.Raid);
                             if (twLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
                             {
-                                Log.Info($"Global Now TimeAttacks Name: {timeAttackName}");
-                                Log.Info($"Global Now TimeAttacks Start At: {ConvertTimestampToDatetime(item.Start)}");
-                                Log.Info($"Global Now TimeAttacks End At: {ConvertTimestampToDatetime(item.End)}");
+                                Log.Info($"Global Now TimeAttacks Name: {timeAttackName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                             }
                         }
                     }
@@ -108,20 +97,17 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     {
                         if (twLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out string globalNowEventName))
                         {
-                            Log.Info($"Global Now Event Name: {globalNowEventName}");
+                            Log.Info($"Global Now Event Name: {globalNowEventName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                         }
                         else if (stages.Events.Any((x) => x.EventId == item.Event))
                         {
-                            Log.Info($"Global Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameTw}");
+                            Log.Info($"Global Now Event Name: {stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameTw} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                         }
                         else
                         {
-                            Log.Warn($"Global No Event Name: {item.Event}");
+                            Log.Warn($"Global No Event Name: {item.Event} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                             continue;
                         }
-
-                        Log.Info($"Global Now Event Start At: {ConvertTimestampToDatetime(item.Start)}");
-                        Log.Info($"Global Now Event End At: {ConvertTimestampToDatetime(globalCurrentRegionsData.CurrentEvents[0].End)}");
                     }
                 }
             }
