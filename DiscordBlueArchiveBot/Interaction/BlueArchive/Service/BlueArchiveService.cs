@@ -25,7 +25,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             _client = client;
             _httpClient = httpClientFactory.CreateClient();
             _refreshTimer = new Timer(new TimerCallback(async (obj) => await RefreshDataAsync()), null, TimeSpan.FromSeconds(1), TimeSpan.FromHours(1));
-            _notify = new Timer(new TimerCallback(async (obj) => await NotifyAsync()), null, TimeSpan.FromSeconds((long)Math.Round(Convert.ToDateTime($"{DateTime.Now.AddHours(1):yyyy/MM/dd HH:00:00}").Subtract(DateTime.Now).TotalSeconds + 3)), TimeSpan.FromHours(1));
+            _notify = new Timer(new TimerCallback(async (obj) => await NotifyAsync()), null, TimeSpan.FromSeconds((long)Math.Round(Convert.ToDateTime($"{DateTime.Now.AddHours(1):yyyy/MM/dd HH:00:00}").Subtract(DateTime.Now).TotalSeconds)), TimeSpan.FromHours(1));
             _notifyCafeInviteTicketUpdateTimer = new Timer(new TimerCallback(async (obj) => await NotifyCafeInviteTicketUpdateAsync()), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
         }
 
@@ -148,7 +148,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     case 13:
                         foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.PVPAward).Distinct((x) => x.UserId))
                         {
-                            await _client.SendMessageToDMChannel(item.UserId, "可以領PVP獎勵了!");
+                            await _client.SendMessageToDMChannel(item.UserId, "可以領PVP獎勵了\n" +
+                                "記得先把排名打上去再領!!!");
                         }
                         break;
                     // 晚上登入
