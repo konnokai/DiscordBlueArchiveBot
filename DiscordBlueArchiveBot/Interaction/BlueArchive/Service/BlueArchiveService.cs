@@ -47,6 +47,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 jpRaids = await GetDataFromServerAsync<RaidsJson>("jp");
                 jpLocalizations = await GetDataFromServerAsync<LocalizationJson>("jp");
 
+                Log.Info($"最新的學生名稱: \"{Students.Last().StudentName}\" | 總學生數量: {Students.Count}");
+
                 var jpCurrentRegionsData = common.Regions.FirstOrDefault((x) => x.Name == "jp");
                 if (jpCurrentRegionsData != null)
                 {
