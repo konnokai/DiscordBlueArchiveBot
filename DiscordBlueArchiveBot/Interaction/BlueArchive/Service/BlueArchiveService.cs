@@ -141,7 +141,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     case 15:
                         foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.CafeInterviewChange).Distinct((x) => x.UserId))
                         {
-                            await _client.SendMessageToDMChannel(item.UserId, "咖啡廳已換人!");
+                            await _client.SendMessageToDMChannel(item.UserId, "咖啡廳已換人!\n" +
+                                "記得順便領咖啡廳的體力!!!");
                         }
                         break;
                     // PVP 獎勵
