@@ -238,7 +238,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 
             var random = new Random(DateTime.Now.Millisecond);
             var student = _service.Students[random.Next(0, _service.Students.Count - 1)];
-            var star = string.Join('\\', Enumerable.Range(1, student.StarGrade!.Value).Select((x) => "*"));
+            var star = string.Join('\\', Enumerable.Range(1, student.StarGrade!.Value).Select((x) => "★"));
 
             await RespondAsync(embed: new EmbedBuilder()
                 .WithOkColor()
