@@ -230,17 +230,21 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
         [SlashCommand("roll", "隨機抽學生")]
         public async Task Roll()
         {
-            await DeferAsync();
-
             if (_service.Students == null)
             {
-                await Context.Interaction.SendErrorAsync("學生資料尚未初始化，請稍後再試", true);
+                await Context.Interaction.SendErrorAsync("學生資料尚未初始化，請稍後再試");
                 return;
             }
 
             var random = new Random(DateTime.Now.Millisecond);
             var student = _service.Students[random.Next(0, _service.Students.Count - 1)];
-            await Context.Interaction.SendConfirmAsync(student.StudentName, true);
+            var star = string.Join('\\', Enumerable.Range(1, student.StarGrade!.Value).Select((x) => "*"));
+
+            await RespondAsync(embed: new EmbedBuilder()
+                .WithOkColor()
+                .WithTitle(student.StudentName)
+                .WithThumbnailUrl($"https://schale.gg/images/student/collection/{student.CollectionTexture}.webp")
+                .AddField("星級", star).Build());
         }
     }
 }
