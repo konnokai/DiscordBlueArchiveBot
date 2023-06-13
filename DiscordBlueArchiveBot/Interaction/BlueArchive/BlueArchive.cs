@@ -226,5 +226,21 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 await Context.Interaction.SendConfirmAsync("已移除", true);
             }
         }
+
+        [SlashCommand("roll", "隨機抽學生")]
+        public async Task Roll()
+        {
+            await DeferAsync();
+
+            if (_service.Students == null)
+            {
+                await Context.Interaction.SendErrorAsync("學生資料尚未初始化，請稍後再試", true);
+                return;
+            }
+
+            var random = new Random(DateTime.Now.Millisecond);
+            var student = _service.Students[random.Next(0, _service.Students.Count - 1)];
+            await Context.Interaction.SendConfirmAsync(student.StudentName, true);
+        }
     }
 }

@@ -14,11 +14,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         private readonly Timer _refreshTimer, _notify, _notifyCafeInviteTicketUpdateTimer;
         private CommonJson common = null;
         private StagesJson stages = null;
+        private StudentsJson students = null;
         private RaidsJson jpRaids = null;
         private LocalizationJson jpLocalizations = null;
         private RaidsJson twRaids = null;
         private LocalizationJson twLocalizations = null;
         private ConcurrentBag<EventData> eventDatas = new ConcurrentBag<EventData>();
+
+        public List<Student> Students
+            => students?.Data;
 
         public BlueArchiveService(DiscordSocketClient client, IHttpClientFactory httpClientFactory)
         {
@@ -37,6 +41,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                 common = await GetDataFromServerAsync<CommonJson>();
                 stages = await GetDataFromServerAsync<StagesJson>();
+                students = await GetDataFromServerAsync<StudentsJson>("tw");
                 twRaids = await GetDataFromServerAsync<RaidsJson>("tw");
                 twLocalizations = await GetDataFromServerAsync<LocalizationJson>("tw");
                 jpRaids = await GetDataFromServerAsync<RaidsJson>("jp");
