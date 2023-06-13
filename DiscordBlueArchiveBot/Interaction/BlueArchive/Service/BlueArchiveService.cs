@@ -25,7 +25,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             _client = client;
             _httpClient = httpClientFactory.CreateClient();
             _refreshTimer = new Timer(new TimerCallback(async (obj) => await RefreshDataAsync()), null, TimeSpan.FromSeconds(1), TimeSpan.FromHours(1));
-            _notify = new Timer(new TimerCallback(async (obj) => await NotifyAsync()), null, TimeSpan.FromSeconds((long)Math.Round(Convert.ToDateTime($"{DateTime.Now.AddHours(1):yyyy/MM/dd HH:00:00}").Subtract(DateTime.Now).TotalSeconds)), TimeSpan.FromHours(1));
+            _notify = new Timer(new TimerCallback(async (obj) => await NotifyAsync()), null, TimeSpan.FromSeconds((long)Math.Round(Convert.ToDateTime($"{DateTime.Now.AddHours(1):yyyy/MM/dd HH:00:00}").Subtract(DateTime.Now).TotalSeconds) + 1), TimeSpan.FromHours(1));
             _notifyCafeInviteTicketUpdateTimer = new Timer(new TimerCallback(async (obj) => await NotifyCafeInviteTicketUpdateAsync()), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
         }
 
@@ -141,8 +141,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     case 15:
                         foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.CafeInterviewChange).Distinct((x) => x.UserId))
                         {
-                            await _client.SendMessageToDMChannel(item.UserId, "咖啡廳已換人!\n" +
-                                "記得順便領咖啡廳的體力!!!");
+                            await _client.SendMessageToDMChannel(item.UserId, "咖啡廳已換人!");
                         }
                         break;
                     // PVP 獎勵
@@ -157,7 +156,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     case 17:
                         foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.NightLogin).Distinct((x) => x.UserId))
                         {
-                            await _client.SendMessageToDMChannel(item.UserId, "記得登入領晚上送的體力!");
+                            await _client.SendMessageToDMChannel(item.UserId, "可以登入領晚上送的體力了\n" +
+                                "記得順便領咖啡廳的體力!");
                         }
                         break;
                     // 活動 & 總力 & 協同
