@@ -120,7 +120,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         }
 
                         Log.Info($"Global Now Event: {globalNowEventName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                        eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.Event, globalNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                        eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.Event, globalNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                     }
                 }
             }
