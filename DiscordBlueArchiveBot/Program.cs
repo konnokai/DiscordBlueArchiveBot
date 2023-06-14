@@ -138,48 +138,47 @@ namespace DiscordBlueArchiveBot
 
             return;
 #endif
-
             #region 註冊互動指令
             try
             {
-                InteractionService interactionService = iService.GetService<InteractionService>();
+                int commandCount = 0;
+
+                if (File.Exists(GetDataFilePath("CommandCount.bin")))
+                    commandCount = BitConverter.ToInt32(File.ReadAllBytes(GetDataFilePath("CommandCount.bin")));
+
+                if (commandCount != iService.GetService<InteractionHandler>().CommandCount)
+                {
+                    try
+                    {
+                        InteractionService interactionService = iService.GetService<InteractionService>();
 #if DEBUG
-                if (botConfig.TestSlashCommandGuildId == 0 || _client.GetGuild(botConfig.TestSlashCommandGuildId) == null)
-                    Log.Warn("未設定測試Slash指令的伺服器或伺服器不存在，略過");
-                else
-                {
-                    try
-                    {
-                        var result = await interactionService.RegisterCommandsToGuildAsync(botConfig.TestSlashCommandGuildId);
-                        Log.Info($"已註冊指令 ({botConfig.TestSlashCommandGuildId}): {string.Join(", ", result.Select((x) => x.Name))}");
-
-                        result = await interactionService.AddModulesToGuildAsync(botConfig.TestSlashCommandGuildId, false, interactionService.Modules.Where((x) => x.DontAutoRegister).ToArray());
-                        Log.Info($"已註冊指令 ({botConfig.TestSlashCommandGuildId}): {string.Join(", ", result.Select((x) => x.Name))}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("註冊伺服器專用Slash指令失敗");
-                        Log.Error(ex.ToString());
-                    }
-                }
-#else
-                try
-                {
-                    try
-                    {
-                        int commandCount = 0;
-
-                        if (File.Exists(GetDataFilePath("CommandCount.bin")))
-                            commandCount = BitConverter.ToInt32(File.ReadAllBytes(GetDataFilePath("CommandCount.bin")));
-
-                        if (botConfig.TestSlashCommandGuildId != 0 && _client.GetGuild(botConfig.TestSlashCommandGuildId) != null)
+                        if (botConfig.TestSlashCommandGuildId == 0 || _client.GetGuild(botConfig.TestSlashCommandGuildId) == null)
+                            Log.Warn("未設定測試Slash指令的伺服器或伺服器不存在，略過");
+                        else
                         {
-                            var result = await interactionService.RemoveModulesFromGuildAsync(botConfig.TestSlashCommandGuildId, interactionService.Modules.Where((x) => !x.DontAutoRegister).ToArray());
-                            Log.Info($"({botConfig.TestSlashCommandGuildId}) 已移除測試指令，剩餘指令: {string.Join(", ", result.Select((x) => x.Name))}");
+                            try
+                            {
+                                var result = await interactionService.RegisterCommandsToGuildAsync(botConfig.TestSlashCommandGuildId);
+                                Log.Info($"已註冊指令 ({botConfig.TestSlashCommandGuildId}): {string.Join(", ", result.Select((x) => x.Name))}");
+
+                                result = await interactionService.AddModulesToGuildAsync(botConfig.TestSlashCommandGuildId, false, interactionService.Modules.Where((x) => x.DontAutoRegister).ToArray());
+                                Log.Info($"已註冊指令 ({botConfig.TestSlashCommandGuildId}): {string.Join(", ", result.Select((x) => x.Name))}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("註冊伺服器專用Slash指令失敗");
+                                Log.Error(ex.ToString());
+                            }
                         }
-
-                        if (commandCount != iService.GetService<InteractionHandler>().CommandCount)
+#else
+                        try
                         {
+                            if (botConfig.TestSlashCommandGuildId != 0 && _client.GetGuild(botConfig.TestSlashCommandGuildId) != null)
+                            {
+                                var result = await interactionService.RemoveModulesFromGuildAsync(botConfig.TestSlashCommandGuildId, interactionService.Modules.Where((x) => !x.DontAutoRegister).ToArray());
+                                Log.Info($"({botConfig.TestSlashCommandGuildId}) 已移除測試指令，剩餘指令: {string.Join(", ", result.Select((x) => x.Name))}");
+                            }
+
                             try
                             {
                                 foreach (var item in interactionService.Modules.Where((x) => x.Preconditions.Any((x) => x is Interaction.Attribute.RequireGuildAttribute)))
@@ -203,31 +202,31 @@ namespace DiscordBlueArchiveBot
                             }
 
                             await iService.GetService<InteractionService>().RegisterCommandsGloballyAsync();
-                            File.WriteAllBytes(GetDataFilePath("CommandCount.bin"), BitConverter.GetBytes(iService.GetService<InteractionHandler>().CommandCount));
                             Log.Info("已註冊全球指令");
                         }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "設定指令數量失敗，請確認檔案是否正常");
+                            if (File.Exists(GetDataFilePath("CommandCount.bin")))
+                                File.Delete(GetDataFilePath("CommandCount.bin"));
+
+                            isDisconnect = true;
+                            return;
+                        }
+#endif
+                        File.WriteAllBytes(GetDataFilePath("CommandCount.bin"), BitConverter.GetBytes(iService.GetService<InteractionHandler>().CommandCount));
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "設定指令數量失敗，請確認檔案是否正常");
-                        if (File.Exists(GetDataFilePath("CommandCount.bin")))
-                            File.Delete(GetDataFilePath("CommandCount.bin"));
-
+                        Log.Error("註冊Slash指令失敗，關閉中...");
+                        Log.Error(ex.ToString());
                         isDisconnect = true;
-                        return;
                     }
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "取得指令數量失敗");
-                    isDisconnect = true;
-                }
-#endif
             }
             catch (Exception ex)
             {
-                Log.Error("註冊Slash指令失敗，關閉中...");
-                Log.Error(ex.ToString());
+                Log.Error(ex, "取得指令數量失敗");
                 isDisconnect = true;
             }
             #endregion

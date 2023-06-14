@@ -9,20 +9,22 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 {
     public class BlueArchiveService : IInteractionService
     {
+        public bool IsRefreshingData { get; private set; } = true;
+        public List<Student> Students => _students?.Data;
+        public List<Student> JPPickUpDatas { get; private set; } = new();
+        public List<Student> GlobalPickUpDatas { get; private set; } = new();
+
         private readonly DiscordSocketClient _client;
         private readonly HttpClient _httpClient;
         private readonly Timer _refreshTimer, _notify, _notifyCafeInviteTicketUpdateTimer;
-        private CommonJson common = null;
-        private StagesJson stages = null;
-        private StudentsJson students = null;
-        private RaidsJson jpRaids = null;
-        private LocalizationJson jpLocalizations = null;
-        private RaidsJson twRaids = null;
-        private LocalizationJson twLocalizations = null;
-        private ConcurrentBag<EventData> eventDatas = new ConcurrentBag<EventData>();
-
-        public List<Student> Students
-            => students?.Data;
+        private CommonJson _common = null;
+        private StagesJson _stages = null;
+        private StudentsJson _students = null;
+        private RaidsJson _jpRaids = null;
+        private LocalizationJson _jpLocalizations = null;
+        private RaidsJson _twRaids = null;
+        private LocalizationJson _twLocalizations = null;
+        private ConcurrentBag<EventData> _eventDatas = new();
 
         public BlueArchiveService(DiscordSocketClient client, IHttpClientFactory httpClientFactory)
         {
@@ -31,42 +33,81 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             _refreshTimer = new Timer(new TimerCallback(async (obj) => await RefreshDataAsync()), null, TimeSpan.FromSeconds(1), TimeSpan.FromHours(1));
             _notify = new Timer(new TimerCallback(async (obj) => await NotifyAsync()), null, TimeSpan.FromSeconds((long)Math.Round(Convert.ToDateTime($"{DateTime.Now.AddHours(1):yyyy/MM/dd HH:00:00}").Subtract(DateTime.Now).TotalSeconds) + 1), TimeSpan.FromHours(1));
             _notifyCafeInviteTicketUpdateTimer = new Timer(new TimerCallback(async (obj) => await NotifyCafeInviteTicketUpdateAsync()), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
+
+            _client.ButtonExecuted += _client_ButtonExecuted;
+        }
+
+        public string GetStudentAvatarPath(int id)
+            => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.webp");
+
+        //Todo: 當抽到三星時要按按鈕才能顯示結果
+        private Task _client_ButtonExecuted(SocketMessageComponent arg)
+        {
+            return Task.CompletedTask;
         }
 
         private async Task RefreshDataAsync()
         {
             try
             {
-                eventDatas.Clear();
+                IsRefreshingData = true;
 
-                common = await GetDataFromServerAsync<CommonJson>();
-                stages = await GetDataFromServerAsync<StagesJson>();
-                students = await GetDataFromServerAsync<StudentsJson>("tw");
-                twRaids = await GetDataFromServerAsync<RaidsJson>("tw");
-                twLocalizations = await GetDataFromServerAsync<LocalizationJson>("tw");
-                jpRaids = await GetDataFromServerAsync<RaidsJson>("jp");
-                jpLocalizations = await GetDataFromServerAsync<LocalizationJson>("jp");
+                _eventDatas.Clear();
+
+                _common = await GetDataFromServerAsync<CommonJson>();
+                _stages = await GetDataFromServerAsync<StagesJson>();
+                _students = await GetDataFromServerAsync<StudentsJson>("tw");
+                _twRaids = await GetDataFromServerAsync<RaidsJson>("tw");
+                _twLocalizations = await GetDataFromServerAsync<LocalizationJson>("tw");
+                _jpRaids = await GetDataFromServerAsync<RaidsJson>("jp");
+                _jpLocalizations = await GetDataFromServerAsync<LocalizationJson>("jp");
 
                 Log.Info($"最新的學生名稱: \"{Students.Last().StudentName}\" | 總學生數量: {Students.Count}");
+                if (!Directory.Exists(Program.GetDataFilePath($"Avatar")))
+                    Directory.CreateDirectory(Program.GetDataFilePath($"Avatar"));
 
-                var jpCurrentRegionsData = common.Regions.FirstOrDefault((x) => x.Name == "jp");
+                foreach (var item in Students)
+                {
+                    if (!File.Exists(GetStudentAvatarPath(item.Id.Value)))
+                    {
+                        try
+                        {
+                            Log.Info($"下載 {item.Id} 的頭像");
+                            var bytes = await _httpClient.GetByteArrayAsync($"https://schale.gg/images/student/collection/{item.CollectionTexture}.webp");
+                            await File.WriteAllBytesAsync(GetStudentAvatarPath(item.Id.Value), bytes);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, $"{item.Id} 頭像下載失敗");
+                        }
+                    }
+                }
+
+                var jpCurrentRegionsData = _common.Regions.FirstOrDefault((x) => x.Name == "jp");
                 if (jpCurrentRegionsData != null)
                 {
+                    // 僅使用現在正開放池的當Pu資料
+                    foreach (var item in jpCurrentRegionsData.CurrentGacha.Where((x) => ConvertTimestampToDatetime(x.Start) <= DateTime.Now && ConvertTimestampToDatetime(x.End) > DateTime.Now))
+                    {
+                        // 要限制只出三星的Pu不然機率會出問題
+                        JPPickUpDatas.AddRange(Students.Where((x) => item.Characters.Any((x2) => x2.Value == x.Id && x.StarGrade == 3)));
+                    }
+
                     foreach (var item in jpCurrentRegionsData.CurrentRaid)
                     {
-                        var jpNowRaidData = jpRaids.Raids.FirstOrDefault((x) => x.Id == item.Raid);
+                        var jpNowRaidData = _jpRaids.Raids.FirstOrDefault((x) => x.Id == item.Raid);
                         if (jpNowRaidData != null)
                         {
                             Log.Info($"JP Now Raid: {jpNowRaidData.Name} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                            eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.Raid, jpNowRaidData.Name, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                            _eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.Raid, jpNowRaidData.Name, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                         }
-                        else if (jpRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
+                        else if (_jpRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
                         {
-                            var timeAttack = jpRaids.TimeAttacks.FirstOrDefault((x) => x.Id == item.Raid);
-                            if (jpLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
+                            var timeAttack = _jpRaids.TimeAttacks.FirstOrDefault((x) => x.Id == item.Raid);
+                            if (_jpLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
                             {
                                 Log.Info($"JP Now TimeAttacks: {timeAttackName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                                eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.TimeAttack, timeAttackName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                                _eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.TimeAttack, timeAttackName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                             }
                         }
                     }
@@ -74,10 +115,10 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     foreach (var item in jpCurrentRegionsData.CurrentEvents)
                     {
                         string jpNowEventName = "";
-                        if (jpLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out jpNowEventName)) { }
-                        else if (stages.Events.Any((x) => x.EventId == item.Event))
+                        if (_jpLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out jpNowEventName)) { }
+                        else if (_stages.Events.Any((x) => x.EventId == item.Event))
                         {
-                            jpNowEventName = stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameJp;
+                            jpNowEventName = _stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameJp;
                         }
                         else
                         {
@@ -86,28 +127,33 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         }
 
                         Log.Info($"JP Now Event: {jpNowEventName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                        eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.Event, jpNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                        _eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.Event, jpNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                     }
                 }
 
-                var globalCurrentRegionsData = common.Regions.FirstOrDefault((x) => x.Name == "global");
+                var globalCurrentRegionsData = _common.Regions.FirstOrDefault((x) => x.Name == "global");
                 if (globalCurrentRegionsData != null)
                 {
+                    foreach (var item in globalCurrentRegionsData.CurrentGacha.Where((x) => ConvertTimestampToDatetime(x.Start) <= DateTime.Now && ConvertTimestampToDatetime(x.End) > DateTime.Now))
+                    {
+                        GlobalPickUpDatas.AddRange(Students.Where((x) => item.Characters.Any((x2) => x2.Value == x.Id && x.StarGrade == 3)));
+                    }
+
                     foreach (var item in globalCurrentRegionsData.CurrentRaid)
                     {
-                        var globalNowRaidData = twRaids.Raids.FirstOrDefault((x) => x.Id == item.Raid);
+                        var globalNowRaidData = _twRaids.Raids.FirstOrDefault((x) => x.Id == item.Raid);
                         if (globalNowRaidData != null)
                         {
                             Log.Info($"Global Now Raid: {globalNowRaidData.Name} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                            eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.Raid, globalNowRaidData.Name, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                            _eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.Raid, globalNowRaidData.Name, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                         }
-                        else if (twRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
+                        else if (_twRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
                         {
-                            var timeAttack = twRaids.TimeAttacks.FirstOrDefault((x) => x.Id == item.Raid);
-                            if (twLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
+                            var timeAttack = _twRaids.TimeAttacks.FirstOrDefault((x) => x.Id == item.Raid);
+                            if (_twLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
                             {
                                 Log.Info($"Global Now TimeAttacks: {timeAttackName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                                eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.TimeAttack, timeAttackName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                                _eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.TimeAttack, timeAttackName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                             }
                         }
                     }
@@ -115,10 +161,10 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     foreach (var item in globalCurrentRegionsData.CurrentEvents)
                     {
                         string globalNowEventName = "";
-                        if (twLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out globalNowEventName)) { }
-                        else if (stages.Events.Any((x) => x.EventId == item.Event))
+                        if (_twLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out globalNowEventName)) { }
+                        else if (_stages.Events.Any((x) => x.EventId == item.Event))
                         {
-                            globalNowEventName = stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameTw;
+                            globalNowEventName = _stages.Events.FirstOrDefault((x) => x.EventId == item.Event).NameTw;
                         }
                         else
                         {
@@ -127,13 +173,17 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         }
 
                         Log.Info($"Global Now Event: {globalNowEventName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                        eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.Event, globalNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                        _eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.Event, globalNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                     }
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "RefreshDataAsync");
+            }
+            finally
+            {
+                IsRefreshingData = false;
             }
         }
 
@@ -171,7 +221,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     case 18:
                         {
                             // 日版
-                            if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
                                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Event)).Distinct((x) => x.UserId))
                                 {
@@ -179,7 +229,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                 }
                             }
 
-                            if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
                                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Raid)).Distinct((x) => x.UserId))
                                 {
@@ -187,7 +237,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                 }
                             }
 
-                            if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
                                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.TimeAttack)).Distinct((x) => x.UserId))
                                 {
@@ -196,7 +246,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             }
 
                             // 國際版
-                            if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
                                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Event)).Distinct((x) => x.UserId))
                                 {
@@ -204,7 +254,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                 }
                             }
 
-                            if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
                                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Raid)).Distinct((x) => x.UserId))
                                 {
@@ -212,7 +262,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                 }
                             }
 
-                            if (eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
                                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.TimeAttack)).Distinct((x) => x.UserId))
                                 {
