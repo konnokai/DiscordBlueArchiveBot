@@ -36,6 +36,12 @@
     <Using Include="Newtonsoft.Json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data\Event_Main_Stage_Bg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <PropertyGroup>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.AddHours(8).ToString("yyyy/MM/dd HH:mm:ss"))</SourceRevisionId>
   </PropertyGroup>

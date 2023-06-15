@@ -4,15 +4,10 @@ using DiscordBlueArchiveBot.Interaction.Attribute;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
-using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
-using System.Drawing;
-using Image = SixLabors.ImageSharp.Image;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using Point = SixLabors.ImageSharp.Point;
-using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Drawing;
+using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
+using Image = SixLabors.ImageSharp.Image;
+using Point = SixLabors.ImageSharp.Point;
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 {
@@ -258,15 +253,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     switch (rollChance)
                     {
                         case <= 57: // 1星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 1).ToList();
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 1 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
                         case > 57 and <= 94: // 二星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 2).ToList();
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 2 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
                         case > 94 and <= 98.6: // 三星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 3).ToList();
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
                         case > 98.6: // Pick Up
@@ -279,15 +274,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     switch (rollChance)
                     {
                         case <= 78.5: // 1星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 1).ToList();
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 1 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
                         case > 78.5 and <= 97: // 二星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 2).ToList();
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 2 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
                         case > 97 and <= 99.3: // 三星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 3).ToList();
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
                         case > 99.3: // Pick Up
@@ -312,7 +307,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             try
             {
                 using var memoryStream = new MemoryStream();
-                using Image image = new Image<Rgba32>(1400, 675);
+                using Image image = Image.Load(Program.GetDataFilePath("Event_Main_Stage_Bg.png"));
                 for (int i = 0; i < rollStudentList.Count; i++)
                 {
                     var item = rollStudentList[i];
@@ -321,8 +316,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                         try
                         {
                             int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
-                            int y = i > 4 ? 400 : 50;
-                            //var star = new Star(50, 50, 5, 20, 45);
+                            int y = i > 4 ? 350 : 50;
                             image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
                             //.AddField("星級", string.Join('\\', Enumerable.Range(1, item.StarGrade!.Value).Select((x) => "★")), i % 5 != 0);
                         }

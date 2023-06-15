@@ -10,6 +10,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
     public class BlueArchiveService : IInteractionService
     {
         public bool IsRefreshingData { get; private set; } = true;
+
+        // https://kamigame.jp/bluearchive/page/240666421468632572.html#%E9%85%8D%E5%B8%83%E3%82%AD%E3%83%A3%E3%83%A9%E4%B8%80%E8%A6%A7
+        public ushort[] EventStudents { get; private set; } = new ushort[] { 13004, 26006, 16006, 26008, 16008, 16009, 26007, 20004, 16010, 16011, 16007, 16012, 26009 };
         public List<Student> Students => _students?.Data;
         public List<Student> JPPickUpDatas { get; private set; } = new();
         public List<Student> GlobalPickUpDatas { get; private set; } = new();
@@ -38,7 +41,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         }
 
         public string GetStudentAvatarPath(int id)
-            => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.jpg");
+            => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.jpg2");
 
         //Todo: 當抽到三星時要按按鈕才能顯示結果
         private Task _client_ButtonExecuted(SocketMessageComponent arg)
