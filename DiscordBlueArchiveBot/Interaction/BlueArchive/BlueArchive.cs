@@ -2,8 +2,17 @@
 using DiscordBlueArchiveBot.DataBase.Table;
 using DiscordBlueArchiveBot.Interaction.Attribute;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
+using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
+using System.Drawing;
+using Image = SixLabors.ImageSharp.Image;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using Point = SixLabors.ImageSharp.Point;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Drawing;
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 {
@@ -227,24 +236,79 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             }
         }
 
-        [SlashCommand("roll", "隨機抽學生")]
-        public async Task Roll()
+        [SlashCommand("roll", "隨機十抽")]
+        public async Task Roll([Summary("伺服器版本", "未輸入則使用日版資料")] RegionType regionType = RegionType.Japan)
         {
-            if (_service.Students == null)
+            if (_service.IsRefreshingData)
             {
-                await Context.Interaction.SendErrorAsync("學生資料尚未初始化，請稍後再試");
+                await Context.Interaction.SendErrorAsync("資料尚未初始化，請稍後再試");
                 return;
             }
 
-            var random = new Random(DateTime.Now.Millisecond);
-            var student = _service.Students[random.Next(0, _service.Students.Count - 1)];
-            var star = string.Join('\\', Enumerable.Range(1, student.StarGrade!.Value).Select((x) => "★"));
+            List<Student> rollStudentList = new(), tempStudentList, pickUpStudentList = regionType == RegionType.Japan ? _service.JPPickUpDatas : _service.GlobalPickUpDatas;
 
-            await RespondAsync(embed: new EmbedBuilder()
-                .WithOkColor()
-                .WithTitle(student.StudentName)
-                .WithThumbnailUrl($"https://schale.gg/images/student/collection/{student.CollectionTexture}.webp")
-                .AddField("星級", star).Build());
+            for (int i = 0; i < 10; i++)
+            {
+                var random = new Random();
+                var rollChance = Math.Round(random.NextDouble() * 100, 1);
+                switch (rollChance)
+                {
+                    case <= 78.5: // 1星
+                        tempStudentList = _service.Students.Where((x) => x.StarGrade == 1).ToList();
+                        rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
+                        break;
+                    case > 78.5 and <= 97: // 二星
+                        tempStudentList = _service.Students.Where((x) => x.StarGrade == 2).ToList();
+                        rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
+                        break;
+                    case > 97 and <= 99.3: // 三星
+                        tempStudentList = _service.Students.Where((x) => x.StarGrade == 3).ToList();
+                        rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
+                        break;
+                    case > 99.3: // Pick Up
+                        rollStudentList.Add(pickUpStudentList[random.Next(0, pickUpStudentList.Count - 1)]);
+                        break;
+                }
+            }
+
+            var eb = new EmbedBuilder().WithOkColor().WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局");
+            if (rollStudentList.Any((x) => x.StarGrade == 3))
+                //Todo: 這個改成針對單一使用者紀錄
+                eb.WithDescription($"十抽出三星機率: {Math.Round((rollStudentList.Count((x) => x.StarGrade == 3) / (double)10) * 100, 1)}%");
+            else
+                eb.WithDescription($"本次十抽沒有出彩...");
+            eb.WithImageUrl($"attachment://image.png");
+
+            try
+            {
+                using var memoryStream = new MemoryStream();
+                using Image image = new Image<Rgba32>(1400, 675);
+                for (int i = 0; i < rollStudentList.Count; i++)
+                {
+                    var item = rollStudentList[i];
+                    using (var img = Image.Load(_service.GetStudentAvatarPath(item.Id!.Value)))
+                    {
+                        try
+                        {
+                            int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
+                            int y = i > 4 ? 400 : 50;
+                            //var star = new Star(50, 50, 5, 20, 45);
+                            image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, i.ToString());
+                        }
+                    }
+                }
+
+                image.Save(memoryStream, new JpegEncoder());
+                await RespondWithFileAsync(memoryStream, "image.png", embed: eb.Build());
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Draw Error");
+            }
         }
     }
 }

@@ -38,7 +38,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         }
 
         public string GetStudentAvatarPath(int id)
-            => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.webp");
+            => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.jpg");
 
         //Todo: 當抽到三星時要按按鈕才能顯示結果
         private Task _client_ButtonExecuted(SocketMessageComponent arg)
@@ -73,8 +73,11 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         try
                         {
                             Log.Info($"下載 {item.Id} 的頭像");
-                            var bytes = await _httpClient.GetByteArrayAsync($"https://schale.gg/images/student/collection/{item.CollectionTexture}.webp");
-                            await File.WriteAllBytesAsync(GetStudentAvatarPath(item.Id.Value), bytes);
+                            var stream = await _httpClient.GetStreamAsync($"https://schale.gg/images/student/collection/{item.CollectionTexture}.webp");
+                            using (var img = await SixLabors.ImageSharp.Image.LoadAsync(stream))
+                            {
+                                await img.SaveAsJpegAsync(GetStudentAvatarPath(item.Id.Value));
+                            }
                         }
                         catch (Exception ex)
                         {
