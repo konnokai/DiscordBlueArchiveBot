@@ -247,37 +247,67 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 
             List<Student> rollStudentList = new(), tempStudentList, pickUpStudentList = regionType == RegionType.Japan ? _service.JPPickUpDatas : _service.GlobalPickUpDatas;
 
+            var random = new Random();
+            bool isARONARoll = random.Next(0, 100) >= 25;
+
             for (int i = 0; i < 10; i++)
             {
-                var random = new Random();
                 var rollChance = Math.Round(random.NextDouble() * 100, 1);
-                switch (rollChance)
+                if (isARONARoll)
                 {
-                    case <= 78.5: // 1星
-                        tempStudentList = _service.Students.Where((x) => x.StarGrade == 1).ToList();
-                        rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
-                        break;
-                    case > 78.5 and <= 97: // 二星
-                        tempStudentList = _service.Students.Where((x) => x.StarGrade == 2).ToList();
-                        rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
-                        break;
-                    case > 97 and <= 99.3: // 三星
-                        tempStudentList = _service.Students.Where((x) => x.StarGrade == 3).ToList();
-                        rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
-                        break;
-                    case > 99.3: // Pick Up
-                        rollStudentList.Add(pickUpStudentList[random.Next(0, pickUpStudentList.Count - 1)]);
-                        break;
+                    switch (rollChance)
+                    {
+                        case <= 60: // 1星
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 1).ToList();
+                            rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
+                            break;
+                        case > 60 and <= 94: // 二星
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 2).ToList();
+                            rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
+                            break;
+                        case > 94 and <= 98.6: // 三星
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 3).ToList();
+                            rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
+                            break;
+                        case > 98.6: // Pick Up
+                            rollStudentList.Add(pickUpStudentList[random.Next(0, pickUpStudentList.Count - 1)]);
+                            break;
+                    }
                 }
+                else
+                {
+                    switch (rollChance)
+                    {
+                        case <= 78.5: // 1星
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 1).ToList();
+                            rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
+                            break;
+                        case > 78.5 and <= 97: // 二星
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 2).ToList();
+                            rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
+                            break;
+                        case > 97 and <= 99.3: // 三星
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 3).ToList();
+                            rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
+                            break;
+                        case > 99.3: // Pick Up
+                            rollStudentList.Add(pickUpStudentList[random.Next(0, pickUpStudentList.Count - 1)]);
+                            break;
+                    }
+                }               
             }
 
-            var eb = new EmbedBuilder().WithOkColor().WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局");
+            string des = isARONARoll ? "黑奈出現，機率加倍!\n" : "";
             if (rollStudentList.Any((x) => x.StarGrade == 3))
                 //Todo: 這個改成針對單一使用者紀錄
-                eb.WithDescription($"十抽出三星機率: {Math.Round((rollStudentList.Count((x) => x.StarGrade == 3) / (double)10) * 100, 1)}%");
+                des += $"十抽出三星機率: {Math.Round((rollStudentList.Count((x) => x.StarGrade == 3) / (double)10) * 100, 1)}%";
             else
-                eb.WithDescription($"本次十抽沒有出彩...");
-            eb.WithImageUrl($"attachment://image.png");
+                des += $"本次十抽沒有出彩...";
+
+            var eb = new EmbedBuilder().WithOkColor()
+                .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
+                .WithDescription(des)
+                .WithImageUrl($"attachment://image.png");
 
             try
             {
@@ -294,6 +324,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                             int y = i > 4 ? 400 : 50;
                             //var star = new Star(50, 50, 5, 20, 45);
                             image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+                            //.AddField("星級", string.Join('\\', Enumerable.Range(1, item.StarGrade!.Value).Select((x) => "★")), i % 5 != 0);
                         }
                         catch (Exception ex)
                         {
