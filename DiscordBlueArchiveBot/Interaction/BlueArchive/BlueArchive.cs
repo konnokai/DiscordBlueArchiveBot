@@ -257,11 +257,11 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 {
                     switch (rollChance)
                     {
-                        case <= 60: // 1星
+                        case <= 57: // 1星
                             tempStudentList = _service.Students.Where((x) => x.StarGrade == 1).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
-                        case > 60 and <= 94: // 二星
+                        case > 57 and <= 94: // 二星
                             tempStudentList = _service.Students.Where((x) => x.StarGrade == 2).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
