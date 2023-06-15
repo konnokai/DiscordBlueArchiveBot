@@ -41,7 +41,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         }
 
         public string GetStudentAvatarPath(int id)
-            => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.jpg2");
+            => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.jpg");
 
         //Todo: 當抽到三星時要按按鈕才能顯示結果
         private Task _client_ButtonExecuted(SocketMessageComponent arg)
