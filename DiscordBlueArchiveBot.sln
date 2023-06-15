@@ -7,11 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiscordBlueArchiveBot", "Di
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C7EE682C-42B5-40F4-B959-F717BBBF72A8}"
 	ProjectSection(SolutionItems) = preProject
+		.env_sample = .env_sample
 		docker-compose.yml = docker-compose.yml
 		Dockerfile = Dockerfile
 		LICENSE.txt = LICENSE.txt
 		README.md = README.md
-		.env_sample = .env_sample
 	EndProjectSection
 EndProject
 Global

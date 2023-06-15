@@ -4,8 +4,11 @@ using DiscordBlueArchiveBot.Interaction.Attribute;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
+using Color = SixLabors.ImageSharp.Color;
 using Image = SixLabors.ImageSharp.Image;
 using Point = SixLabors.ImageSharp.Point;
 
@@ -302,12 +305,13 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             var eb = new EmbedBuilder().WithOkColor()
                 .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
                 .WithDescription(des)
-                .WithImageUrl($"attachment://image.png");
+                .WithImageUrl($"attachment://image.jpg");
 
             try
             {
                 using var memoryStream = new MemoryStream();
-                using Image image = Image.Load(Program.GetDataFilePath("Event_Main_Stage_Bg.png"));
+                
+                using Image image = Image.Load(Properties.Resources.Event_Main_Stage_Bg.AsSpan());
                 for (int i = 0; i < rollStudentList.Count; i++)
                 {
                     var item = rollStudentList[i];
@@ -317,7 +321,30 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                         {
                             int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
                             int y = i > 4 ? 350 : 50;
+
+                            var star = new Star(x, y, 5, 15, 25);
+                            Color[] colors =
+                            {
+                                Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
+                                Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
+                            };
+
                             image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+
+                            switch (item.StarGrade)
+                            {
+                                case 1:
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(122, 222, 255), star));
+                                    break;
+                                case 2:
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), star));
+                                    break;
+                                case 3:
+                                    var brush = new PathGradientBrush(star.Points.ToArray(), colors, Color.White);
+                                    image.Mutate((act) => act.Fill(brush));
+                                    break;
+                            }
+                            
                             //.AddField("星級", string.Join('\\', Enumerable.Range(1, item.StarGrade!.Value).Select((x) => "★")), i % 5 != 0);
                         }
                         catch (Exception ex)
@@ -328,7 +355,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 }
 
                 image.Save(memoryStream, new JpegEncoder());
-                await RespondWithFileAsync(memoryStream, "image.png", embed: eb.Build());
+                await RespondWithFileAsync(memoryStream, "image.jpg", embed: eb.Build());
             }
             catch (Exception ex)
             {
