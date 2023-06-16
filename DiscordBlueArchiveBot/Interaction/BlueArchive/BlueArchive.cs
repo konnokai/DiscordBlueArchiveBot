@@ -256,7 +256,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     switch (rollChance)
                     {
                         case <= 57: // 1星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 1 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
+                            int guarantStarGrade = i == 9 ? 2 : 1;
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == guarantStarGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
                         case > 57 and <= 94: // 二星
@@ -277,7 +278,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     switch (rollChance)
                     {
                         case <= 78.5: // 1星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 1 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
+                            int guarantStarGrade = i == 9 ? 2 : 1;
+                            tempStudentList = _service.Students.Where((x) => x.StarGrade == guarantStarGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
                             rollStudentList.Add(tempStudentList[random.Next(0, tempStudentList.Count - 1)]);
                             break;
                         case > 78.5 and <= 97: // 二星
