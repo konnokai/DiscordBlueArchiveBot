@@ -294,7 +294,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                             rollStudentList.Add(pickUpStudentList[random.Next(0, pickUpStudentList.Count - 1)]);
                             break;
                     }
-                }               
+                }
             }
 
             string des = isARONARoll ? "黑奈出現，機率加倍!\n" : "";
@@ -311,9 +311,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 
             try
             {
+                Color[] colors =
+                {
+                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
+                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
+                };
+
                 using var memoryStream = new MemoryStream();
-                
                 using Image image = Image.Load(Properties.Resources.Event_Main_Stage_Bg.AsSpan());
+
                 for (int i = 0; i < rollStudentList.Count; i++)
                 {
                     var item = rollStudentList[i];
@@ -323,30 +329,27 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                         {
                             int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
                             int y = i > 4 ? 350 : 50;
-
-                            var star = new Star(x, y, 5, 15, 25);
-                            Color[] colors =
-                            {
-                                Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
-                                Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
-                            };
-
-                            image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+                            var rect = new RectangularPolygon(x - 10, y - 10, img.Width + 20, img.Height + 20);
 
                             switch (item.StarGrade)
                             {
                                 case 1:
-                                    image.Mutate((act) => act.Fill(Color.FromRgb(122, 222, 255), star));
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), rect));
                                     break;
                                 case 2:
-                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), star));
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), rect));
                                     break;
-                                case 3:
-                                    var brush = new PathGradientBrush(star.Points.ToArray(), colors, Color.White);
+                                case 3 when !pickUpStudentList.Any((x) => x.Id == item.Id):
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), rect));
+                                    break;
+                                case 3 when pickUpStudentList.Any((x) => x.Id == item.Id):
+                                    var brush = new PathGradientBrush(rect.Points.ToArray(), colors, Color.White);
                                     image.Mutate((act) => act.Fill(brush));
                                     break;
                             }
-                            
+
+                            image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+
                             //.AddField("星級", string.Join('\\', Enumerable.Range(1, item.StarGrade!.Value).Select((x) => "★")), i % 5 != 0);
                         }
                         catch (Exception ex)
