@@ -4,13 +4,7 @@ using DiscordBlueArchiveBot.Interaction.Attribute;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
-using SixLabors.ImageSharp.Drawing;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
-using Color = SixLabors.ImageSharp.Color;
-using Image = SixLabors.ImageSharp.Image;
-using Point = SixLabors.ImageSharp.Point;
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 {
@@ -297,75 +291,28 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 }
             }
 
-            string des = isARONARoll ? "黑奈出現，機率加倍!\n" : "";
-            if (rollStudentList.Any((x) => x.StarGrade == 3))
+            string backgroundUrl;
+            if (rollStudentList.Any((x) => x.StarGrade == 3) && Math.Round(random.NextDouble() * 100, 1) >= 1) // 有 1% 的機率是藍背景
+            {
+                backgroundUrl = "https://static.wikia.nocookie.net/blue-archive/images/d/db/Gacha_-_Rainbow_2.png";
                 //Todo: 這個改成針對單一使用者紀錄
-                des += $"十抽出三星機率: {Math.Round((rollStudentList.Count((x) => x.StarGrade == 3) / (double)10) * 100, 1)}%";
+                //des += $"十抽出三星機率: {Math.Round((rollStudentList.Count((x) => x.StarGrade == 3) / (double)10) * 100, 1)}%";
+            }
             else
-                des += $"本次十抽沒有出彩...";
+            {
+                backgroundUrl = "https://static.wikia.nocookie.net/blue-archive/images/8/8a/Gacha_-_Blue_2.png";
+                //des += $"本次十抽沒有出彩...";
+            }
 
             var eb = new EmbedBuilder().WithOkColor()
                 .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
-                .WithDescription(des)
-                .WithImageUrl($"attachment://image.jpg");
+                .WithDescription(isARONARoll ? "黑奈出現，機率加倍!" : "")
+                .WithImageUrl(backgroundUrl);
 
-            try
-            {
-                Color[] colors =
-                {
-                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
-                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
-                };
+            var cb = new ComponentBuilder()
+                .WithButton("簽名開牌!", "roll:" + (regionType == RegionType.Japan ? "0" : "1") + $":{Context.User.Id}:{string.Join('_', rollStudentList.Select((x) => x.Id))}", ButtonStyle.Primary);
 
-                using var memoryStream = new MemoryStream();
-                using Image image = Image.Load(Properties.Resources.Event_Main_Stage_Bg.AsSpan());
-
-                for (int i = 0; i < rollStudentList.Count; i++)
-                {
-                    var item = rollStudentList[i];
-                    using (var img = Image.Load(_service.GetStudentAvatarPath(item.Id!.Value)))
-                    {
-                        try
-                        {
-                            int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
-                            int y = i > 4 ? 350 : 50;
-                            var rect = new RectangularPolygon(x - 10, y - 10, img.Width + 20, img.Height + 20);
-
-                            switch (item.StarGrade)
-                            {
-                                case 1:
-                                    image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), rect));
-                                    break;
-                                case 2:
-                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), rect));
-                                    break;
-                                case 3 when !pickUpStudentList.Any((x) => x.Id == item.Id):
-                                    image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), rect));
-                                    break;
-                                case 3 when pickUpStudentList.Any((x) => x.Id == item.Id):
-                                    var brush = new PathGradientBrush(rect.Points.ToArray(), colors, Color.White);
-                                    image.Mutate((act) => act.Fill(brush));
-                                    break;
-                            }
-
-                            image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
-
-                            //.AddField("星級", string.Join('\\', Enumerable.Range(1, item.StarGrade!.Value).Select((x) => "★")), i % 5 != 0);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, i.ToString());
-                        }
-                    }
-                }
-
-                image.Save(memoryStream, new JpegEncoder());
-                await RespondWithFileAsync(memoryStream, "image.jpg", embed: eb.Build());
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Draw Error");
-            }
+            await RespondAsync(embed: eb.Build(), components: cb.Build());
         }
     }
 }

@@ -3,7 +3,18 @@
 using DiscordBlueArchiveBot.DataBase.Table;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using System.Collections.Concurrent;
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using System.Threading.Channels;
+using Color = SixLabors.ImageSharp.Color;
+using Image = SixLabors.ImageSharp.Image;
+using Point = SixLabors.ImageSharp.Point;
+using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 {
@@ -43,10 +54,112 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         public string GetStudentAvatarPath(int id)
             => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.jpg");
 
-        //Todo: 當抽到三星時要按按鈕才能顯示結果
-        private Task _client_ButtonExecuted(SocketMessageComponent arg)
+        private async Task _client_ButtonExecuted(SocketMessageComponent component)
         {
-            return Task.CompletedTask;
+            if (component.HasResponded)
+                return;
+
+            try
+            {
+                string[] customId = component.Data.CustomId.Split(new char[] { ':' });
+
+                if (!customId[0].StartsWith("roll") || customId.Length != 4)
+                    return;
+
+                if (customId[2] != component.User.Id.ToString())
+                {
+                    await component.SendErrorAsync("你不可使用本按鈕");
+                    return;
+                }
+
+                try
+                {
+                    var pickUpStudentList = customId[1] == "0" ? JPPickUpDatas : GlobalPickUpDatas;
+                    string[] studentsId = customId[3].Split('_', StringSplitOptions.RemoveEmptyEntries);
+
+                    Color[] colors =
+                    {
+                        Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
+                        Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
+                    };
+
+                    using var memoryStream = new MemoryStream();
+                    using Image image = Image.Load(Properties.Resources.Event_Main_Stage_Bg.AsSpan());
+
+                    for (int i = 0; i < studentsId.Length; i++)
+                    {
+                        var item = Students.SingleOrDefault((x) => x.Id.ToString() == studentsId[i]);
+                        if (item == null)
+                        {
+                            Log.Error($"Id: {studentsId[i]} 無學生資料!!");
+
+                            await component.ModifyOriginalResponseAsync((act) =>
+                            {
+                                act.Components = new ComponentBuilder().WithButton("簽名開牌!", disabled: true).Build();
+                                act.Embed = new EmbedBuilder().WithErrorColor().WithDescription("缺少學生資料，無法繪製圖片，請向 Bot 擁有者確認").Build();
+                            });
+
+                            return;
+                        }
+
+                        using (var img = Image.Load(GetStudentAvatarPath(item.Id!.Value)))
+                        {
+                            try
+                            {
+                                int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
+                                int y = i > 4 ? 350 : 50;
+                                var rect = new RectangularPolygon(x - 10, y - 10, img.Width + 20, img.Height + 20);
+
+                                switch (item.StarGrade)
+                                {
+                                    case 1:
+                                        image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), rect));
+                                        break;
+                                    case 2:
+                                        image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), rect));
+                                        break;
+                                    case 3 when !pickUpStudentList.Any((x) => x.Id == item.Id):
+                                        image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), rect));
+                                        break;
+                                    case 3 when pickUpStudentList.Any((x) => x.Id == item.Id):
+                                        var brush = new PathGradientBrush(rect.Points.ToArray(), colors, Color.White);
+                                        image.Mutate((act) => act.Fill(brush));
+                                        break;
+                                }
+
+                                image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error(ex, i.ToString());
+                            }
+                        }
+                    }
+
+                    var eb = new EmbedBuilder().WithOkColor()
+                        .WithAuthor(component.User)
+                        .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
+                        .WithImageUrl("attachment://image.jpg");
+
+                    image.Save(memoryStream, new JpegEncoder());
+                    
+                    await component.UpdateAsync((act) => {
+                        act.Attachments = new List<FileAttachment>() { new FileAttachment(memoryStream, "image.jpg") };
+                        act.Embed = eb.Build();
+                        act.Components = null;
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Draw Error");
+                }
+            }
+            catch (Exception ex)
+            {
+                await component.SendErrorAsync("錯誤，請向孤之界回報此問題", true);
+                Log.Error(ex.ToString());
+                return;
+            }
         }
 
         private async Task RefreshDataAsync()
