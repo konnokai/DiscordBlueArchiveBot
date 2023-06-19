@@ -93,9 +93,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         {
                             Log.Error($"Id: {studentsId[i]} 無學生資料!!");
 
-                            await component.ModifyOriginalResponseAsync((act) =>
+                            await component.UpdateAsync((act) =>
                             {
-                                act.Components = new ComponentBuilder().WithButton("簽名開牌!", disabled: true).Build();
+                                act.Components = null;
                                 act.Embed = new EmbedBuilder().WithErrorColor().WithDescription("缺少學生資料，無法繪製圖片，請向 Bot 擁有者確認").Build();
                             });
 
@@ -137,7 +137,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     }
 
                     var eb = new EmbedBuilder().WithOkColor()
-                        .WithAuthor(component.User)
+                        .WithDescription(component.Message.Embeds.First().Description)
                         .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
                         .WithImageUrl("attachment://image.jpg");
 
