@@ -1,20 +1,15 @@
 ﻿#nullable disable
 
-using DiscordBlueArchiveBot.DataBase.Table;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using System.Collections.Concurrent;
-using SixLabors.ImageSharp.Drawing;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using System.Threading.Channels;
+using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
 using Color = SixLabors.ImageSharp.Color;
 using Image = SixLabors.ImageSharp.Image;
 using Point = SixLabors.ImageSharp.Point;
-using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 {
@@ -142,8 +137,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         .WithImageUrl("attachment://image.jpg");
 
                     image.Save(memoryStream, new JpegEncoder());
-                    
-                    await component.UpdateAsync((act) => {
+
+                    await component.UpdateAsync((act) =>
+                    {
                         act.Attachments = new List<FileAttachment>() { new FileAttachment(memoryStream, "image.jpg") };
                         act.Embed = eb.Build();
                         act.Components = null;
@@ -218,7 +214,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         if (jpNowRaidData != null)
                         {
                             Log.Info($"JP Now Raid: {jpNowRaidData.Name} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                            _eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.Raid, jpNowRaidData.Name, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                            _eventDatas.Add(new EventData(RegionType.Japan, NotifyType.Raid, jpNowRaidData.Name, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                         }
                         else if (_jpRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
                         {
@@ -226,7 +222,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             if (_jpLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
                             {
                                 Log.Info($"JP Now TimeAttacks: {timeAttackName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                                _eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.TimeAttack, timeAttackName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                                _eventDatas.Add(new EventData(RegionType.Japan, NotifyType.TimeAttack, timeAttackName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                             }
                         }
                     }
@@ -246,7 +242,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         }
 
                         Log.Info($"JP Now Event: {jpNowEventName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                        _eventDatas.Add(new EventData(NotifyConfig.RegionType.Japan, NotifyConfig.NotifyType.Event, jpNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                        _eventDatas.Add(new EventData(RegionType.Japan, NotifyType.Event, jpNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                     }
                 }
 
@@ -264,7 +260,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         if (globalNowRaidData != null)
                         {
                             Log.Info($"Global Now Raid: {globalNowRaidData.Name} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                            _eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.Raid, globalNowRaidData.Name, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                            _eventDatas.Add(new EventData(RegionType.Global, NotifyType.Raid, globalNowRaidData.Name, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                         }
                         else if (_twRaids.TimeAttacks.Any((x) => x.Id == item.Raid))
                         {
@@ -272,7 +268,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             if (_twLocalizations.Data["TimeAttackStage"].TryGetValue(timeAttack.DungeonType, out string timeAttackName))
                             {
                                 Log.Info($"Global Now TimeAttacks: {timeAttackName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                                _eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.TimeAttack, timeAttackName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                                _eventDatas.Add(new EventData(RegionType.Global, NotifyType.TimeAttack, timeAttackName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                             }
                         }
                     }
@@ -292,7 +288,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         }
 
                         Log.Info($"Global Now Event: {globalNowEventName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
-                        _eventDatas.Add(new EventData(NotifyConfig.RegionType.Global, NotifyConfig.NotifyType.Event, globalNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
+                        _eventDatas.Add(new EventData(RegionType.Global, NotifyType.Event, globalNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
                     }
                 }
             }
@@ -315,14 +311,14 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     // 咖啡廳換人
                     case 9:
                     case 15:
-                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.CafeInterviewChange).Distinct((x) => x.UserId))
+                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.CafeInterviewChange).Distinct((x) => x.UserId))
                         {
                             await _client.SendMessageToDMChannel(item.UserId, "咖啡廳已換人!");
                         }
                         break;
                     // PVP 獎勵
                     case 13:
-                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.PVPAward).Distinct((x) => x.UserId))
+                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.PVPAward).Distinct((x) => x.UserId))
                         {
                             await _client.SendMessageToDMChannel(item.UserId, "可以領PVP獎勵了\n" +
                                 "記得先把排名打上去再領!!!");
@@ -330,7 +326,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         break;
                     // 晚上登入
                     case 17:
-                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.NightLogin).Distinct((x) => x.UserId))
+                        foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.NightLogin).Distinct((x) => x.UserId))
                         {
                             await _client.SendMessageToDMChannel(item.UserId, "可以登入領晚上送的體力了\n" +
                                 "記得順便領咖啡廳的體力!");
@@ -340,50 +336,50 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     case 18:
                         {
                             // 日版
-                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Japan && x.EventType == NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Event)).Distinct((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Japan && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.Event)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打日版活動!");
                                 }
                             }
 
-                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Japan && x.EventType == NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Raid)).Distinct((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Japan && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.Raid)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打日版總力戰!");
                                 }
                             }
 
-                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Japan && x.EventType == NotifyConfig.NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Japan && x.EventType == NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Japan && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.TimeAttack)).Distinct((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Japan && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.TimeAttack)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打日版協同!");
                                 }
                             }
 
                             // 國際版
-                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Global && x.EventType == NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Event)).Distinct((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Global && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.Event)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打國際版活動!");
                                 }
                             }
 
-                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Global && x.EventType == NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.Raid)).Distinct((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Global && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.Raid)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打國際版總力戰!");
                                 }
                             }
 
-                            if (_eventDatas.Any((x) => x.RegionType == NotifyConfig.RegionType.Global && x.EventType == NotifyConfig.NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
+                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Global && x.EventType == NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
                             {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == NotifyConfig.RegionType.Global && (x.NotifyTypeId == NotifyConfig.NotifyType.All || x.NotifyTypeId == NotifyConfig.NotifyType.TimeAttack)).Distinct((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Global && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.TimeAttack)).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, "記得打國際版協同!");
                                 }
@@ -405,7 +401,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 {
                     Log.Info($"向 {item.UserId} 發送 {item.RegionTypeId} 邀請券更新通知");
 
-                    await _client.SendMessageToDMChannel(item.UserId, (item.RegionTypeId == NotifyConfig.RegionType.Japan ? "日版" : "國際版") + $"的咖啡廳邀請券已更新!");
+                    await _client.SendMessageToDMChannel(item.UserId, (item.RegionTypeId == RegionType.Japan ? "日版" : "國際版") + $"的咖啡廳邀請券已更新!");
 
                     db.CafeInviteTicketUpdateTime.Remove(item);
                     await db.SaveChangesAsync();
