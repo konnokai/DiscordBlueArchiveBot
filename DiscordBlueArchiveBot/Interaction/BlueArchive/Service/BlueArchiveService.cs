@@ -61,7 +61,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 if (!customId[0].StartsWith("roll") || customId.Length != 4)
                     return;
 
-                if (customId[2] != component.User.Id.ToString())
+                if (customId[2] != component.User.Id.ToString() && component.User.Id != Program.ApplicatonOwner.Id)
                 {
                     await component.SendErrorAsync("你不可使用本按鈕");
                     return;
