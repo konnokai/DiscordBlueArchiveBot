@@ -243,7 +243,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 
             for (int i = 0; i < 10; i++)
             {
-                var rollChance = Math.Round(RandomNumberGenerator.GetInt32(0, 10000) + 1 / 100f, 1);
+                var rollChance = Math.Round(RandomNumberGenerator.GetInt32(0, 10001) / 100f, 1);
                 if (isARONARoll)
                 {
                     switch (rollChance)
@@ -307,7 +307,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             }
 
             string backgroundUrl;
-            if (rollStudentList.Any((x) => x.StarGrade == 3) && Math.Round(RandomNumberGenerator.GetInt32(0, 10000) + 1 / 100f, 1) >= 1) // 有 1% 的機率是藍背景
+            if (rollStudentList.Any((x) => x.StarGrade == 3) && Math.Round(RandomNumberGenerator.GetInt32(0, 10001) / 100f, 1) >= 1) // 有 1% 的機率是藍背景
             {
                 backgroundUrl = "https://static.wikia.nocookie.net/blue-archive/images/d/db/Gacha_-_Rainbow_2.png";
             }
