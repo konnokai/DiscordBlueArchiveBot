@@ -262,7 +262,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                             rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
                             break;
                         case > 98.6: // Pick Up
-                            rollStudentList.Add(pickUpStudentList[RandomNumberGenerator.GetInt32(0, pickUpStudentList.Count)]);
+                            if (pickUpStudentList.Any())
+                            {
+                                rollStudentList.Add(pickUpStudentList[RandomNumberGenerator.GetInt32(0, pickUpStudentList.Count)]);
+                            }
+                            else
+                            {
+                                tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
+                                rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                            }
                             break;
                     }
                 }
@@ -284,7 +292,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                             rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
                             break;
                         case > 99.3: // Pick Up
-                            rollStudentList.Add(pickUpStudentList[RandomNumberGenerator.GetInt32(0, pickUpStudentList.Count)]);
+                            if (pickUpStudentList.Any())
+                            {
+                                rollStudentList.Add(pickUpStudentList[RandomNumberGenerator.GetInt32(0, pickUpStudentList.Count)]);
+                            }
+                            else
+                            {
+                                tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
+                                rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                            }
                             break;
                     }
                 }

@@ -6,6 +6,7 @@ using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
 using Color = SixLabors.ImageSharp.Color;
 using Image = SixLabors.ImageSharp.Image;
