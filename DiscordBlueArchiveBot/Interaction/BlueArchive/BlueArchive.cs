@@ -239,11 +239,11 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             }
 
             List<Student> rollStudentList = new(), tempStudentList, pickUpStudentList = regionType == RegionType.Japan ? _service.JPPickUpDatas : _service.GlobalPickUpDatas;
-            bool isARONARoll = RandomNumberGenerator.GetInt32(0, 100) >= 25;
+            bool isARONARoll = RandomNumberGenerator.GetInt32(0, 100) + 1 >= 25;
 
             for (int i = 0; i < 10; i++)
             {
-                var rollChance = Math.Round(RandomNumberGenerator.GetInt32(0, 10000) / 100f, 1);
+                var rollChance = Math.Round(RandomNumberGenerator.GetInt32(0, 10000) + 1 / 100f, 1);
                 if (isARONARoll)
                 {
                     switch (rollChance)
@@ -251,18 +251,18 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                         case <= 78.5: // 1星
                             int guarantStarGrade = i == 9 ? 2 : 1;
                             tempStudentList = _service.Students.Where((x) => x.StarGrade == guarantStarGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count - 1)]);
+                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
                             break;
                         case > 78.5 and <= 94: // 二星
                             tempStudentList = _service.Students.Where((x) => x.StarGrade == 2 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count - 1)]);
+                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
                             break;
                         case > 94 and <= 98.6: // 三星
                             tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count - 1)]);
+                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
                             break;
                         case > 98.6: // Pick Up
-                            rollStudentList.Add(pickUpStudentList[RandomNumberGenerator.GetInt32(0, pickUpStudentList.Count - 1)]);
+                            rollStudentList.Add(pickUpStudentList[RandomNumberGenerator.GetInt32(0, pickUpStudentList.Count)]);
                             break;
                     }
                 }
@@ -273,25 +273,25 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                         case <= 78.5: // 1星
                             int guarantStarGrade = i == 9 ? 2 : 1;
                             tempStudentList = _service.Students.Where((x) => x.StarGrade == guarantStarGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count - 1)]);
+                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
                             break;
                         case > 78.5 and <= 97: // 二星
                             tempStudentList = _service.Students.Where((x) => x.StarGrade == 2 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count - 1)]);
+                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
                             break;
                         case > 97 and <= 99.3: // 三星
                             tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count - 1)]);
+                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
                             break;
                         case > 99.3: // Pick Up
-                            rollStudentList.Add(pickUpStudentList[RandomNumberGenerator.GetInt32(0, pickUpStudentList.Count - 1)]);
+                            rollStudentList.Add(pickUpStudentList[RandomNumberGenerator.GetInt32(0, pickUpStudentList.Count)]);
                             break;
                     }
                 }
             }
 
             string backgroundUrl;
-            if (rollStudentList.Any((x) => x.StarGrade == 3) && Math.Round(RandomNumberGenerator.GetInt32(0, 10000) / 100f, 1) >= 1) // 有 1% 的機率是藍背景
+            if (rollStudentList.Any((x) => x.StarGrade == 3) && Math.Round(RandomNumberGenerator.GetInt32(0, 10000) + 1 / 100f, 1) >= 1) // 有 1% 的機率是藍背景
             {
                 backgroundUrl = "https://static.wikia.nocookie.net/blue-archive/images/d/db/Gacha_-_Rainbow_2.png";
             }
