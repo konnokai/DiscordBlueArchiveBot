@@ -25,7 +25,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         public int? Id { get; set; }
 
         [JsonProperty("IsReleased")]
-        public List<bool?> IsReleased { get; set; }
+        public List<bool> IsReleased { get; set; }
 
         [JsonProperty("DefaultOrder")]
         public int? DefaultOrder { get; set; }

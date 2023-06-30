@@ -250,16 +250,13 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     {
                         case <= 78.5: // 1星
                             int guarantStarGrade = i == 9 ? 2 : 1;
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == guarantStarGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                            rollStudentList.Add(GetRandomStudentFromStarGrade(guarantStarGrade, regionType));
                             break;
                         case > 78.5 and <= 94: // 二星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 2 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                            rollStudentList.Add(GetRandomStudentFromStarGrade(2, regionType));
                             break;
                         case > 94 and <= 98.6: // 三星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                            rollStudentList.Add(GetRandomStudentFromStarGrade(3, regionType));
                             break;
                         case > 98.6: // Pick Up
                             if (pickUpStudentList.Any())
@@ -268,8 +265,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                             }
                             else
                             {
-                                tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                                rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                                rollStudentList.Add(GetRandomStudentFromStarGrade(3, regionType));
                             }
                             break;
                     }
@@ -280,16 +276,13 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     {
                         case <= 78.5: // 1星
                             int guarantStarGrade = i == 9 ? 2 : 1;
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == guarantStarGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                            rollStudentList.Add(GetRandomStudentFromStarGrade(guarantStarGrade, regionType));
                             break;
                         case > 78.5 and <= 97: // 二星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 2 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                            rollStudentList.Add(GetRandomStudentFromStarGrade(2, regionType));
                             break;
                         case > 97 and <= 99.3: // 三星
-                            tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                            rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                            rollStudentList.Add(GetRandomStudentFromStarGrade(3, regionType));
                             break;
                         case > 99.3: // Pick Up
                             if (pickUpStudentList.Any())
@@ -298,8 +291,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                             }
                             else
                             {
-                                tempStudentList = _service.Students.Where((x) => x.StarGrade == 3 && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
-                                rollStudentList.Add(tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)]);
+                                rollStudentList.Add(GetRandomStudentFromStarGrade(3, regionType));
                             }
                             break;
                     }
@@ -325,6 +317,21 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 .WithButton("簽名開牌!", "roll:" + (regionType == RegionType.Japan ? "0" : "1") + $":{Context.User.Id}:{string.Join('_', rollStudentList.Select((x) => x.Id))}", ButtonStyle.Primary);
 
             await RespondAsync(embed: eb.Build(), components: cb.Build());
+        }
+
+        private Student GetRandomStudentFromStarGrade(int starGrade, RegionType regionType)
+        {
+            List<Student> tempStudentList;
+            if (regionType == RegionType.Japan)
+            {
+                tempStudentList =  _service.Students.Where((x) => x.StarGrade == starGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
+            }
+            else
+            {
+                tempStudentList = _service.Students.Where((x) => x.StarGrade == starGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0 && x.IsReleased.Last()).ToList();
+            }
+
+            return tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)];
         }
     }
 }
