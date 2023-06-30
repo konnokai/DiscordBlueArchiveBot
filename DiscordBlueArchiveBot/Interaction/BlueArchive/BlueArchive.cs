@@ -249,8 +249,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     switch (rollChance)
                     {
                         case <= 78.5: // 1星
-                            int guarantStarGrade = i == 9 ? 2 : 1;
-                            rollStudentList.Add(GetRandomStudentFromStarGrade(guarantStarGrade, regionType));
+                            rollStudentList.Add(GetRandomStudentFromStarGrade(i == 9 ? 2 : 1, regionType));
                             break;
                         case > 78.5 and <= 94: // 二星
                             rollStudentList.Add(GetRandomStudentFromStarGrade(2, regionType));
@@ -275,8 +274,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     switch (rollChance)
                     {
                         case <= 78.5: // 1星
-                            int guarantStarGrade = i == 9 ? 2 : 1;
-                            rollStudentList.Add(GetRandomStudentFromStarGrade(guarantStarGrade, regionType));
+                            rollStudentList.Add(GetRandomStudentFromStarGrade(i == 9 ? 2 : 1, regionType));
                             break;
                         case > 78.5 and <= 97: // 二星
                             rollStudentList.Add(GetRandomStudentFromStarGrade(2, regionType));
