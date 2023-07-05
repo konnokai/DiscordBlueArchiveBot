@@ -318,7 +318,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             {
                                 Log.Info($"今天生日的學生: {string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}");
 
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.StudentBirthday).Distinct((x) => x.UserId))
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.BirthdayStudent).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, 
                                         $"今天是 `{string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}` 的生日!", 
