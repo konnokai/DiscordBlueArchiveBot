@@ -316,6 +316,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             var birthdayStudent = Students.Where((x) => x.BirthDay == $"{DateTime.Now:M/d}");
                             if (birthdayStudent.Any())
                             {
+                                Log.Info($"今天生日的學生: {string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}");
+
                                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.StudentBirthday).Distinct((x) => x.UserId))
                                 {
                                     await _client.SendMessageToDMChannel(item.UserId, 
