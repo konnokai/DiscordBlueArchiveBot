@@ -147,14 +147,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 }
                 catch (Exception ex)
                 {
-                    await component.SendErrorAsync("繪圖錯誤，請向孤之界回報此問題", true);
                     Log.Error(ex, "Draw Error");
+                    await component.SendErrorAsync("繪圖錯誤，請向孤之界回報此問題", true);
+                    return;
                 }
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "RollButtonExecuted");
                 await component.SendErrorAsync("錯誤，請向孤之界回報此問題", true);
-                Log.Error(ex.ToString());
                 return;
             }
         }
