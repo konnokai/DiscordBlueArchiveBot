@@ -98,7 +98,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             return;
                         }
 
-                        using (var img = Image.Load(GetStudentAvatarPath(item.Id!.Value)))
+                        using (var img = Image.Load(GetStudentAvatarPath(item.Id)))
                         {
                             try
                             {
@@ -127,7 +127,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             }
                             catch (Exception ex)
                             {
-                                Log.Error(ex, i.ToString());
+                                Log.Error(ex, $"Draw Student Error: {item.Id} ({i})");
                             }
                         }
                     }
@@ -148,6 +148,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 }
                 catch (Exception ex)
                 {
+                    await component.SendErrorAsync("繪圖錯誤，請向孤之界回報此問題", true);
                     Log.Error(ex, "Draw Error");
                 }
             }
@@ -181,7 +182,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                 foreach (var item in Students)
                 {
-                    if (!File.Exists(GetStudentAvatarPath(item.Id.Value)))
+                    if (!File.Exists(GetStudentAvatarPath(item.Id)))
                     {
                         try
                         {
@@ -189,7 +190,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             var stream = await _httpClient.GetStreamAsync($"https://schale.gg/images/student/collection/{item.CollectionTexture}.webp");
                             using (var img = await SixLabors.ImageSharp.Image.LoadAsync(stream))
                             {
-                                await img.SaveAsJpegAsync(GetStudentAvatarPath(item.Id.Value));
+                                await img.SaveAsJpegAsync(GetStudentAvatarPath(item.Id));
                             }
                         }
                         catch (Exception ex)
@@ -436,7 +437,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 Log.Debug($"Load From API: {url}");
 
                 json = await _httpClient.GetStringAsync(url);
-                await Program.RedisDb.StringSetAsync(redisKey, json, TimeSpan.FromHours(1));
+                await Program.RedisDb.StringSetAsync(redisKey, json, TimeSpan.FromMinutes(59));
             }
 
             if (type.DeserializeAction != null)

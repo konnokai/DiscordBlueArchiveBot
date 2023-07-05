@@ -22,7 +22,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
     {
 
         [JsonProperty("Id")]
-        public int? Id { get; set; }
+        public int Id { get; set; }
 
         [JsonProperty("IsReleased")]
         public List<bool> IsReleased { get; set; }

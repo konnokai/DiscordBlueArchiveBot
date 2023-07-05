@@ -238,7 +238,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 return;
             }
 
-            List<Student> rollStudentList = new(), tempStudentList, pickUpStudentList = regionType == RegionType.Japan ? _service.JPPickUpDatas : _service.GlobalPickUpDatas;
+            List<Student> rollStudentList = new(), pickUpStudentList = regionType == RegionType.Japan ? _service.JPPickUpDatas : _service.GlobalPickUpDatas;
             bool isARONARoll = RandomNumberGenerator.GetInt32(0, 100) + 1 >= 25;
 
             for (int i = 0; i < 10; i++)
@@ -322,11 +322,11 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             List<Student> tempStudentList;
             if (regionType == RegionType.Japan)
             {
-                tempStudentList =  _service.Students.Where((x) => x.StarGrade == starGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0).ToList();
+                tempStudentList = _service.Students.Where((x) => x.StarGrade == starGrade && !_service.EventStudents.Any((x2) => x.Id == x2) && x.IsLimited == 0).ToList();
             }
             else
             {
-                tempStudentList = _service.Students.Where((x) => x.StarGrade == starGrade && !_service.EventStudents.Any((x2) => x.Id!.Value == x2) && x.IsLimited == 0 && x.IsReleased.Last()).ToList();
+                tempStudentList = _service.Students.Where((x) => x.StarGrade == starGrade && !_service.EventStudents.Any((x2) => x.Id == x2) && x.IsLimited == 0 && x.IsReleased.Last()).ToList();
             }
 
             return tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)];
