@@ -6,7 +6,6 @@ using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
 using Color = SixLabors.ImageSharp.Color;
 using Image = SixLabors.ImageSharp.Image;
@@ -310,9 +309,23 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             {
                 switch (DateTime.Now.Hour)
                 {
-                    // 咖啡廳換人
-                    case 9:
-                    case 15:
+                    case 9 or 15:
+                        // 生日提醒
+                        if (DateTime.Now.Hour == 9 && Students != null)
+                        {
+                            var birthdayStudent = Students.Where((x) => x.BirthDay == $"{DateTime.Now:M/d}");
+                            if (birthdayStudent.Any())
+                            {
+                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.StudentBirthday).Distinct((x) => x.UserId))
+                                {
+                                    await _client.SendMessageToDMChannel(item.UserId, 
+                                        $"今天是 `{string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}` 的生日!", 
+                                        $"https://schale.gg/images/student/collection/{birthdayStudent.First().CollectionTexture}.webp");
+                                }
+                            }
+                        }
+
+                        // 咖啡廳換人
                         foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.CafeInterviewChange).Distinct((x) => x.UserId))
                         {
                             await _client.SendMessageToDMChannel(item.UserId, "咖啡廳已換人!");
@@ -463,6 +476,25 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 {
                     var channel = await user.CreateDMChannelAsync();
                     await channel.SendMessageAsync(embed: new EmbedBuilder().WithOkColor().WithDescription(message).Build());
+                    await channel.CloseAsync();
+                }
+            }
+            catch (Discord.Net.HttpException discordEx) when (discordEx.DiscordCode != null)
+            {
+                Log.Error(discordEx, $"向 {userId} 發送訊息 `{message}` 失敗");
+            }
+        }
+
+
+        public static async Task SendMessageToDMChannel(this DiscordSocketClient client, ulong userId, string message, string thumbnailUrl)
+        {
+            try
+            {
+                var user = await client.Rest.GetUserAsync(userId);
+                if (user != null)
+                {
+                    var channel = await user.CreateDMChannelAsync();
+                    await channel.SendMessageAsync(embed: new EmbedBuilder().WithOkColor().WithDescription(message).WithThumbnailUrl(thumbnailUrl).Build());
                     await channel.CloseAsync();
                 }
             }

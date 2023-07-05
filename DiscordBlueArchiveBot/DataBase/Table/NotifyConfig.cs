@@ -20,6 +20,8 @@ namespace DiscordBlueArchiveBot.DataBase.Table
             PVPAward = 5,
             [ChoiceDisplay("咖啡廳換人 (早上九點及下午三點通知)")] // 固定 03. & 15. 更新
             CafeInterviewChange = 6,
+            [ChoiceDisplay("今天誰生日 (早上九點通知，如果有的話)")]
+            StudentBirthday = 7,
         }
 
         public enum RegionType
