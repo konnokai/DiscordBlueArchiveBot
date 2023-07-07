@@ -314,7 +314,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         // 生日提醒
                         if (DateTime.Now.Hour == 9 && Students != null)
                         {
-                            var birthdayStudent = Students.Where((x) => x.BirthDay == $"{DateTime.Now:M/d}");
+                            var birthdayStudent = Students.Where((x) => x.BirthDay == $"{DateTime.Now:M/d}").Distinct((x) => x.PersonalName);
                             if (birthdayStudent.Any())
                             {
                                 Log.Info($"今天生日的學生: {string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}");
