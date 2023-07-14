@@ -136,7 +136,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     string description = component.Message.Embeds.First().Description;
                     try
                     {
-                        var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(component.User.Id.ToString()));
+                        var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(customId[2]));
                         if (valve.HasValue)
                         {
                             var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve);
