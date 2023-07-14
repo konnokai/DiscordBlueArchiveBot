@@ -140,8 +140,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         if (valve.HasValue)
                         {
                             var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve);
-                            double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount, 2) * 100;
-                            double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount, 2) * 100;
+                            double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
+                            double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount * 100, 2);
 
                             description += "\n" +
                                 $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
