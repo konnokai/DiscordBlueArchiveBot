@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using StackExchange.Redis;
 using System.Collections.Concurrent;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
 using Color = SixLabors.ImageSharp.Color;
@@ -135,19 +136,17 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     string description = component.Message.Embeds.First().Description;
                     try
                     {
-                        using (var db = DataBase.MainDbContext.GetDbContext())
+                        var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(component.User.Id.ToString()));
+                        if (valve.HasValue)
                         {
-                            var userGachaRecord = db.UserGachaRecord.AsNoTracking().SingleOrDefault((x) => x.UserId == component.User.Id);
-                            if (userGachaRecord != null)
-                            {
-                                double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount, 2) * 100;
-                                double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount, 2) * 100;
+                            var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve);
+                            double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount, 2) * 100;
+                            double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount, 2) * 100;
 
-                                description += "\n" +
-                                    $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
-                                    $"三星數: {userGachaRecord.ThreeStarCount} ({threeStartPercentage}%)\n" +
-                                    $"PickUp數: {userGachaRecord.PickUpCount} ({pickUpPercentage}%)";
-                            }
+                            description += "\n" +
+                                $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
+                                $"三星數: {userGachaRecord.ThreeStarCount} ({threeStartPercentage}%)\n" +
+                                $"PickUp數: {userGachaRecord.PickUpCount} ({pickUpPercentage}%)";
                         }
                     }
                     catch (Exception ex)
