@@ -296,6 +296,27 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 }
             }
 
+            try
+            {
+                using (var db = DataBase.MainDbContext.GetDbContext())
+                {
+                    var userGachaRecord = db.UserGachaRecord.SingleOrDefault((x) => x.UserId == Context.User.Id);
+                    if (userGachaRecord == null)
+                        userGachaRecord = new UserGachaRecord() { UserId = Context.User.Id };
+
+                    userGachaRecord.TotalGachaCount += 10;
+                    userGachaRecord.ThreeStarCount += (uint)rollStudentList.Count((x) => x.StarGrade == 3);
+                    userGachaRecord.PickUpCount += (uint)rollStudentList.Count((x) => pickUpStudentList.Any((x2) => x.Id == x2.Id));
+
+                    db.UserGachaRecord.Update(userGachaRecord);
+                    await db.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Roll - 資料庫保存失敗");
+            }
+
             string backgroundUrl;
             if (rollStudentList.Any((x) => x.StarGrade == 3) && Math.Round(RandomNumberGenerator.GetInt32(0, 10001) / 100f, 1) >= 1) // 有 1% 的機率是藍背景
             {

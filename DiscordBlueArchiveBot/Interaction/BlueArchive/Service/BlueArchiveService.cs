@@ -1,5 +1,6 @@
 ﻿#nullable disable
 
+using DiscordBlueArchiveBot.DataBase.Table;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp.Drawing;
@@ -131,8 +132,31 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         }
                     }
 
+                    string description = component.Message.Embeds.First().Description;
+                    try
+                    {
+                        using (var db = DataBase.MainDbContext.GetDbContext())
+                        {
+                            var userGachaRecord = db.UserGachaRecord.AsNoTracking().SingleOrDefault((x) => x.UserId == component.User.Id);
+                            if (userGachaRecord != null)
+                            {
+                                double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount, 2) * 100;
+                                double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount, 2) * 100;
+
+                                description += "\n" +
+                                    $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
+                                    $"三星數: {userGachaRecord.ThreeStarCount} ({threeStartPercentage}%)\n" +
+                                    $"PickUp數: {userGachaRecord.PickUpCount} ({pickUpPercentage}%)";
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "DrawRoll - 資料庫存取失敗");
+                    }
+
                     var eb = new EmbedBuilder().WithOkColor()
-                        .WithDescription(component.Message.Embeds.First().Description)
+                        .WithDescription(description)
                         .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
                         .WithImageUrl("attachment://image.jpg");
 
