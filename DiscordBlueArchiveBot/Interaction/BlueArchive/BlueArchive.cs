@@ -239,6 +239,13 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 return;
             }
 
+            if (await Program.RedisDb.KeyExistsAsync($"bluearchive:gachaExpire:{Context.User.Id}"))
+            {
+                var rollExpireTime = await Program.RedisDb.KeyExpireTimeAsync($"bluearchive:gachaExpire:{Context.User.Id}");
+                await Context.Interaction.SendErrorAsync($"還在冷卻，剩餘時間: {rollExpireTime.Value.AddHours(8).Subtract(DateTime.Now):hh\\時mm\\分ss\\秒}");
+                return;
+            }
+
             List<Student> rollStudentList = new(), pickUpStudentList = regionType == RegionType.Japan ? _service.JPPickUpDatas : _service.GlobalPickUpDatas;
             bool isARONARoll = RandomNumberGenerator.GetInt32(0, 100) + 1 >= 25;
 
@@ -312,12 +319,21 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     db.UserGachaRecord.Update(userGachaRecord);
                     await db.SaveChangesAsync();
 
-                    await Program.RedisDb.HashSetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(Context.User.Id.ToString()), new RedisValue(JsonConvert.SerializeObject(userGachaRecord)));
+                    await Program.RedisDb.HashSetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(Context.User.Id.ToString()), new RedisValue(JsonConvert.SerializeObject(userGachaRecord)));                    
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Roll - 資料庫保存失敗");
+            }
+
+            try
+            {
+                await Program.RedisDb.StringSetAsync(new RedisKey($"bluearchive:gachaExpire:{Context.User.Id}"), new RedisValue("1"), TimeSpan.FromHours(1));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Roll - Redis 抽卡過期時間設定失敗");
             }
 
             string backgroundUrl;
