@@ -60,124 +60,152 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             {
                 string[] customId = component.Data.CustomId.Split(new char[] { ':' });
 
-                if (!customId[0].StartsWith("roll") || customId.Length != 4)
-                    return;
-
-                if (customId[2] != component.User.Id.ToString() && component.User.Id != Program.ApplicatonOwner.Id)
+                switch (customId[0])
                 {
-                    await component.SendErrorAsync("你不可使用本按鈕");
-                    return;
-                }
-
-                try
-                {
-                    var pickUpStudentList = customId[1] == "0" ? JPPickUpDatas : GlobalPickUpDatas;
-                    string[] studentsId = customId[3].Split('_', StringSplitOptions.RemoveEmptyEntries);
-
-                    Color[] colors =
-                    {
-                        Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
-                        Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
-                    };
-
-                    using var memoryStream = new MemoryStream();
-                    using Image image = Image.Load(Properties.Resources.Event_Main_Stage_Bg.AsSpan());
-
-                    for (int i = 0; i < studentsId.Length; i++)
-                    {
-                        var item = Students.SingleOrDefault((x) => x.Id.ToString() == studentsId[i]);
-                        if (item == null)
+                    case "roll" when customId.Length == 4:
                         {
-                            Log.Error($"Id: {studentsId[i]} 無學生資料!!");
-
-                            await component.UpdateAsync((act) =>
+                            if (customId[2] != component.User.Id.ToString() && component.User.Id != Program.ApplicatonOwner.Id)
                             {
-                                act.Components = null;
-                                act.Embed = new EmbedBuilder().WithErrorColor().WithDescription("缺少學生資料，無法繪製圖片，請向 Bot 擁有者確認").Build();
-                            });
+                                await component.SendErrorAsync("你不可使用本按鈕");
+                                return;
+                            }
 
-                            return;
-                        }
-
-                        using (var img = Image.Load(GetStudentAvatarPath(item.Id)))
-                        {
                             try
                             {
-                                int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
-                                int y = i > 4 ? 350 : 50;
-                                var rect = new RectangularPolygon(x - 10, y - 10, img.Width + 20, img.Height + 20);
+                                var pickUpStudentList = customId[1] == "0" ? JPPickUpDatas : GlobalPickUpDatas;
+                                string[] studentsId = customId[3].Split('_', StringSplitOptions.RemoveEmptyEntries);
 
-                                switch (item.StarGrade)
+                                Color[] colors =
                                 {
-                                    case 1:
-                                        image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), rect));
-                                        break;
-                                    case 2:
-                                        image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), rect));
-                                        break;
-                                    case 3 when !pickUpStudentList.Any((x) => x.Id == item.Id):
-                                        image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), rect));
-                                        break;
-                                    case 3 when pickUpStudentList.Any((x) => x.Id == item.Id):
-                                        var brush = new PathGradientBrush(rect.Points.ToArray(), colors, Color.White);
-                                        image.Mutate((act) => act.Fill(brush));
-                                        break;
+                                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
+                                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
+                                };
+
+                                using var memoryStream = new MemoryStream();
+                                using Image image = Image.Load(Properties.Resources.Event_Main_Stage_Bg.AsSpan());
+
+                                for (int i = 0; i < studentsId.Length; i++)
+                                {
+                                    var item = Students.SingleOrDefault((x) => x.Id.ToString() == studentsId[i]);
+                                    if (item == null)
+                                    {
+                                        Log.Error($"Id: {studentsId[i]} 無學生資料!!");
+
+                                        await component.UpdateAsync((act) =>
+                                        {
+                                            act.Components = null;
+                                            act.Embed = new EmbedBuilder().WithErrorColor().WithDescription("缺少學生資料，無法繪製圖片，請向 Bot 擁有者確認").Build();
+                                        });
+
+                                        return;
+                                    }
+
+                                    using (var img = Image.Load(GetStudentAvatarPath(item.Id)))
+                                    {
+                                        try
+                                        {
+                                            int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
+                                            int y = i > 4 ? 350 : 50;
+                                            var rect = new RectangularPolygon(x - 10, y - 10, img.Width + 20, img.Height + 20);
+
+                                            switch (item.StarGrade)
+                                            {
+                                                case 1:
+                                                    image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), rect));
+                                                    break;
+                                                case 2:
+                                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), rect));
+                                                    break;
+                                                case 3 when !pickUpStudentList.Any((x) => x.Id == item.Id):
+                                                    image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), rect));
+                                                    break;
+                                                case 3 when pickUpStudentList.Any((x) => x.Id == item.Id):
+                                                    var brush = new PathGradientBrush(rect.Points.ToArray(), colors, Color.White);
+                                                    image.Mutate((act) => act.Fill(brush));
+                                                    break;
+                                            }
+
+                                            image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Log.Error(ex, $"Draw Student Error: {item.Id} ({i})");
+                                        }
+                                    }
                                 }
 
-                                image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+                                string description = component.Message.Embeds.First().Description;
+                                try
+                                {
+                                    var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(customId[2]));
+                                    if (valve.HasValue)
+                                    {
+                                        var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve);
+                                        double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
+                                        double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount * 100, 2);
+
+                                        description += "\n" +
+                                            $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
+                                            $"三星數: {userGachaRecord.ThreeStarCount} ({threeStartPercentage}%)\n" +
+                                            $"PickUp數: {userGachaRecord.PickUpCount} ({pickUpPercentage}%)";
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error(ex, "DrawRoll - 資料庫存取失敗");
+                                }
+
+                                var eb = new EmbedBuilder().WithOkColor()
+                                    .WithDescription(description)
+                                    .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
+                                    .WithImageUrl("attachment://image.jpg");
+
+                                image.Save(memoryStream, new JpegEncoder());
+
+                                await component.UpdateAsync((act) =>
+                                {
+                                    act.Attachments = new List<FileAttachment>() { new FileAttachment(memoryStream, "image.jpg") };
+                                    act.Embed = eb.Build();
+                                    act.Components = null;
+                                });
                             }
                             catch (Exception ex)
                             {
-                                Log.Error(ex, $"Draw Student Error: {item.Id} ({i})");
+                                Log.Error(ex, "Draw Error");
+                                await component.SendErrorAsync("繪圖錯誤，請向孤之界回報此問題", true);
+                                return;
                             }
                         }
-                    }
-
-                    string description = component.Message.Embeds.First().Description;
-                    try
-                    {
-                        var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(customId[2]));
-                        if (valve.HasValue)
+                        break;
+                    case "ticket_update" when customId.Length == 2:
                         {
-                            var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve);
-                            double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
-                            double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount * 100, 2);
+                            RegionType regionType = customId[1] == "0" ? RegionType.Japan : RegionType.Global;
+                            using (var db = DataBase.MainDbContext.GetDbContext())
+                            {                               
+                                CafeInviteTicketUpdateTime cafeInviteTicketUpdateTime;
+                                if ((cafeInviteTicketUpdateTime = db.CafeInviteTicketUpdateTime.SingleOrDefault((x) => x.UserId == component.User.Id && x.RegionTypeId == regionType)) != null)
+                                {
+                                    cafeInviteTicketUpdateTime.NotifyDateTime = DateTime.Now.AddHours(20);
+                                    db.CafeInviteTicketUpdateTime.Update(cafeInviteTicketUpdateTime);
+                                    await component.RespondAsync(embed: new EmbedBuilder().WithOkColor().WithDescription($"已覆蓋通知設定").Build());
+                                }
+                                else
+                                {
+                                    db.CafeInviteTicketUpdateTime.Add(new CafeInviteTicketUpdateTime() { UserId = component.User.Id, RegionTypeId = regionType, NotifyDateTime = DateTime.Now.AddHours(20) });
+                                    await component.RespondAsync(embed: new EmbedBuilder().WithOkColor().WithDescription($"已設定通知").Build());
+                                }
 
-                            description += "\n" +
-                                $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
-                                $"三星數: {userGachaRecord.ThreeStarCount} ({threeStartPercentage}%)\n" +
-                                $"PickUp數: {userGachaRecord.PickUpCount} ({pickUpPercentage}%)";
+                                await db.SaveChangesAsync();
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "DrawRoll - 資料庫存取失敗");
-                    }
-
-                    var eb = new EmbedBuilder().WithOkColor()
-                        .WithDescription(description)
-                        .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
-                        .WithImageUrl("attachment://image.jpg");
-
-                    image.Save(memoryStream, new JpegEncoder());
-
-                    await component.UpdateAsync((act) =>
-                    {
-                        act.Attachments = new List<FileAttachment>() { new FileAttachment(memoryStream, "image.jpg") };
-                        act.Embed = eb.Build();
-                        act.Components = null;
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Draw Error");
-                    await component.SendErrorAsync("繪圖錯誤，請向孤之界回報此問題", true);
-                    return;
+                        break;
+                    default:
+                        break;
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "RollButtonExecuted");
+                Log.Error(ex, "ButtonExecuted");
                 await component.SendErrorAsync("錯誤，請向孤之界回報此問題", true);
                 return;
             }
@@ -440,9 +468,13 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             {
                 foreach (var item in db.CafeInviteTicketUpdateTime.Where((x) => x.NotifyDateTime <= DateTime.Now))
                 {
-                    Log.Info($"向 {item.UserId} 發送 {item.RegionTypeId} 邀請券更新通知");
+                    string region = item.RegionTypeId == RegionType.Japan ? "日版" : "國際版";
+                    var componentBuilder = new ComponentBuilder()
+                        .WithButton($"再次提醒{region}邀請券更新", $"ticket_update:{(int)item.RegionTypeId}");
 
-                    await _client.SendMessageToDMChannel(item.UserId, (item.RegionTypeId == RegionType.Japan ? "日版" : "國際版") + $"的咖啡廳邀請券已更新!");
+                    Log.Info($"向 {item.UserId} 發送 {region} 邀請券更新通知");
+
+                    await _client.SendMessageToDMChannel(item.UserId, $"{region}的咖啡廳邀請券已更新!", componentBuilder.Build());
 
                     db.CafeInviteTicketUpdateTime.Remove(item);
                     await db.SaveChangesAsync();
@@ -493,7 +525,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
     public static class Ext
     {
-        public static async Task SendMessageToDMChannel(this DiscordSocketClient client, ulong userId, string message)
+        public static async Task SendMessageToDMChannel(this DiscordSocketClient client, ulong userId, string message, MessageComponent component = null)
         {
             try
             {
@@ -501,7 +533,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 if (user != null)
                 {
                     var channel = await user.CreateDMChannelAsync();
-                    await channel.SendMessageAsync(embed: new EmbedBuilder().WithOkColor().WithDescription(message).Build());
+                    await channel.SendMessageAsync(embed: new EmbedBuilder().WithOkColor().WithDescription(message).Build(), components: component);
                     await channel.CloseAsync();
                 }
             }
