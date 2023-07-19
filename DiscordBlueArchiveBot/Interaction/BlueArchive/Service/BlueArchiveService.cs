@@ -179,20 +179,26 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         break;
                     case "ticket_update" when customId.Length == 2:
                         {
+                            await component.UpdateAsync((act) =>
+                            {
+                                act.Embed = component.Message.Embeds.First();
+                                act.Components = null;
+                            });
+
                             RegionType regionType = customId[1] == "0" ? RegionType.Japan : RegionType.Global;
                             using (var db = DataBase.MainDbContext.GetDbContext())
-                            {                               
+                            {
                                 CafeInviteTicketUpdateTime cafeInviteTicketUpdateTime;
                                 if ((cafeInviteTicketUpdateTime = db.CafeInviteTicketUpdateTime.SingleOrDefault((x) => x.UserId == component.User.Id && x.RegionTypeId == regionType)) != null)
                                 {
                                     cafeInviteTicketUpdateTime.NotifyDateTime = DateTime.Now.AddHours(20);
                                     db.CafeInviteTicketUpdateTime.Update(cafeInviteTicketUpdateTime);
-                                    await component.RespondAsync(embed: new EmbedBuilder().WithOkColor().WithDescription($"已覆蓋通知設定").Build());
+                                    await component.FollowupAsync(embed: new EmbedBuilder().WithOkColor().WithDescription($"已覆蓋通知設定").Build());
                                 }
                                 else
                                 {
                                     db.CafeInviteTicketUpdateTime.Add(new CafeInviteTicketUpdateTime() { UserId = component.User.Id, RegionTypeId = regionType, NotifyDateTime = DateTime.Now.AddHours(20) });
-                                    await component.RespondAsync(embed: new EmbedBuilder().WithOkColor().WithDescription($"已設定通知").Build());
+                                    await component.FollowupAsync(embed: new EmbedBuilder().WithOkColor().WithDescription($"已設定通知").Build());
                                 }
 
                                 await db.SaveChangesAsync();
