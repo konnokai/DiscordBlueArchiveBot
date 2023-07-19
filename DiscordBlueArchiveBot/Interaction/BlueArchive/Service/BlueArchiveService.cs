@@ -404,60 +404,49 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     // 活動 & 總力 & 協同
                     case 18:
                         {
-                            // 日版
-                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Japan && x.EventType == NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
-                            {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Japan && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.Event)).Distinct((x) => x.UserId))
-                                {
-                                    await _client.SendMessageToDMChannel(item.UserId, "記得打日版活動!");
-                                }
-                            }
+                            await SendEventNotifyAsync(db, RegionType.Japan, NotifyType.Event);
+                            await SendEventNotifyAsync(db, RegionType.Japan, NotifyType.Raid);
+                            await SendEventNotifyAsync(db, RegionType.Japan, NotifyType.TimeAttack);
 
-                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Japan && x.EventType == NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
-                            {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Japan && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.Raid)).Distinct((x) => x.UserId))
-                                {
-                                    await _client.SendMessageToDMChannel(item.UserId, "記得打日版總力戰!");
-                                }
-                            }
-
-                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Japan && x.EventType == NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
-                            {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Japan && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.TimeAttack)).Distinct((x) => x.UserId))
-                                {
-                                    await _client.SendMessageToDMChannel(item.UserId, "記得打日版協同!");
-                                }
-                            }
-
-                            // 國際版
-                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Global && x.EventType == NotifyType.Event && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
-                            {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Global && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.Event)).Distinct((x) => x.UserId))
-                                {
-                                    await _client.SendMessageToDMChannel(item.UserId, "記得打國際版活動!");
-                                }
-                            }
-
-                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Global && x.EventType == NotifyType.Raid && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
-                            {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Global && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.Raid)).Distinct((x) => x.UserId))
-                                {
-                                    await _client.SendMessageToDMChannel(item.UserId, "記得打國際版總力戰!");
-                                }
-                            }
-
-                            if (_eventDatas.Any((x) => x.RegionType == RegionType.Global && x.EventType == NotifyType.TimeAttack && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now))
-                            {
-                                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == RegionType.Global && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.TimeAttack)).Distinct((x) => x.UserId))
-                                {
-                                    await _client.SendMessageToDMChannel(item.UserId, "記得打國際版協同!");
-                                }
-                            }
-
+                            await SendEventNotifyAsync(db, RegionType.Global, NotifyType.Event);
+                            await SendEventNotifyAsync(db, RegionType.Global, NotifyType.Raid);
+                            await SendEventNotifyAsync(db, RegionType.Global, NotifyType.TimeAttack);
                             break;
                         }
                     default:
                         break;
+                }
+            }
+        }
+
+        private async Task SendEventNotifyAsync(DataBase.MainDbContext db, RegionType regionType, NotifyType notifyType)
+        {
+            EventData eventData;
+            if ((eventData = _eventDatas.FirstOrDefault((x) => x.RegionType == regionType && x.EventType == notifyType && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now)) != null)
+            {
+                string message = "記得打";
+
+                message += regionType == RegionType.Japan ? "日版" : "國際版";
+
+                switch (notifyType)
+                {
+                    case NotifyType.Event:
+                        message += "活動";
+                        break;
+                    case NotifyType.Raid:
+                        message += "總力戰";
+                        break;
+                    case NotifyType.TimeAttack:
+                        message += "考試";
+                        break;
+                }
+
+                if (eventData.EndAt.Subtract(DateTime.Now).TotalDays < 1)
+                    message += "\n今天是最後一天!!!";
+
+                foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == regionType && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == notifyType)).Distinct((x) => x.UserId))
+                {
+                    await _client.SendMessageToDMChannel(item.UserId, message);
                 }
             }
         }

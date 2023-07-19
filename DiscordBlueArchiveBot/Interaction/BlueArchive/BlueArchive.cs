@@ -319,7 +319,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                     db.UserGachaRecord.Update(userGachaRecord);
                     await db.SaveChangesAsync();
 
-                    await Program.RedisDb.HashSetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(Context.User.Id.ToString()), new RedisValue(JsonConvert.SerializeObject(userGachaRecord)));                    
+                    await Program.RedisDb.HashSetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(Context.User.Id.ToString()), new RedisValue(JsonConvert.SerializeObject(userGachaRecord)));
                 }
             }
             catch (Exception ex)
