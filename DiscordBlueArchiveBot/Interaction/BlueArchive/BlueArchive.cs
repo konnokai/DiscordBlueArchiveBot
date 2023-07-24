@@ -5,6 +5,7 @@ using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
 
@@ -247,7 +248,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             }
 
             List<Student> rollStudentList = new(), pickUpStudentList = regionType == RegionType.Japan ? _service.JPPickUpDatas : _service.GlobalPickUpDatas;
-            bool isARONARoll = RandomNumberGenerator.GetInt32(0, 100) + 1 >= 25;
+            bool isARONARoll = RandomNumberGenerator.GetInt32(0, 100) + 1 >= 25, isNeedEphemeral = true;
 
             for (int i = 0; i < 10; i++)
             {
@@ -327,17 +328,23 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 Log.Error(ex, "Roll - 資料庫保存失敗");
             }
 
-            try
+            if (!Debugger.IsAttached)
             {
-                await Program.RedisDb.StringSetAsync(new RedisKey($"bluearchive:gachaExpire:{Context.User.Id}"), new RedisValue("1"), TimeSpan.FromHours(1));
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Roll - Redis 抽卡過期時間設定失敗");
+                try
+                {
+                    await Program.RedisDb.StringSetAsync(new RedisKey($"bluearchive:gachaExpire:{Context.User.Id}"), new RedisValue("1"), TimeSpan.FromHours(1));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Roll - Redis 抽卡過期時間設定失敗");
+                }
             }
 
+            if (rollStudentList.Any((x) => x.StarGrade == 3))
+                isNeedEphemeral = false;
+
             string backgroundUrl;
-            if (rollStudentList.Any((x) => x.StarGrade == 3) && Math.Round(RandomNumberGenerator.GetInt32(0, 10001) / 100f, 1) >= 1) // 有 1% 的機率是藍背景
+            if (!isNeedEphemeral && Math.Round(RandomNumberGenerator.GetInt32(0, 10001) / 100f, 1) >= 1) // 有 1% 的機率是藍背景
             {
                 backgroundUrl = "https://static.wikia.nocookie.net/blue-archive/images/d/db/Gacha_-_Rainbow_2.png";
             }
@@ -354,7 +361,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             var cb = new ComponentBuilder()
                 .WithButton("簽名開牌!", "roll:" + (regionType == RegionType.Japan ? "0" : "1") + $":{Context.User.Id}:{string.Join('_', rollStudentList.Select((x) => x.Id))}", ButtonStyle.Primary);
 
-            await RespondAsync(embed: eb.Build(), components: cb.Build());
+            await RespondAsync(embed: eb.Build(), components: cb.Build(), ephemeral: isNeedEphemeral);
         }
 
         private Student GetRandomStudentFromStarGrade(int starGrade, RegionType regionType)
