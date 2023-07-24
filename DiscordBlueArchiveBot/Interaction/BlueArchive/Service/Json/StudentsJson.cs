@@ -46,7 +46,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         public string Club { get; set; }
 
         [JsonProperty("StarGrade")]
-        public int? StarGrade { get; set; }
+        public int StarGrade { get; set; }
 
         [JsonProperty("SquadType")]
         public string SquadType { get; set; }

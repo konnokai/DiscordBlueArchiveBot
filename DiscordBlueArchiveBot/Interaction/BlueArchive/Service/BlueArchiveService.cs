@@ -70,6 +70,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                 return;
                             }
 
+                            int maxStudentStarGrade = 1;
                             try
                             {
                                 var pickUpStudentList = customId[1] == "0" ? JPPickUpDatas : GlobalPickUpDatas;
@@ -99,6 +100,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                                         return;
                                     }
+
+                                    if (maxStudentStarGrade < item.StarGrade)
+                                        maxStudentStarGrade = item.StarGrade;
 
                                     using (var img = Image.Load(GetStudentAvatarPath(item.Id)))
                                     {
@@ -158,12 +162,28 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                     Log.Error(ex, "DrawRoll - 資料庫存取失敗");
                                 }
 
-                                var eb = new EmbedBuilder().WithOkColor()
+                                image.Save(memoryStream, new JpegEncoder());
+
+                                var eb = new EmbedBuilder()
                                     .WithDescription(description)
                                     .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
                                     .WithImageUrl("attachment://image.jpg");
 
-                                image.Save(memoryStream, new JpegEncoder());
+                                switch (maxStudentStarGrade)
+                                {
+                                    case 1:
+                                        eb.WithColor(254, 254, 254);
+                                        break;
+                                    case 2:
+                                        eb.WithColor(255, 247, 122);
+                                        break;
+                                    case 3:
+                                        eb.WithColor(239, 195, 220);
+                                        break;
+                                    default:
+                                        eb.WithColor(254, 254, 254);
+                                        break;
+                                }
 
                                 await component.UpdateAsync((act) =>
                                 {
