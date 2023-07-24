@@ -106,21 +106,24 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                         {
                                             int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
                                             int y = i > 4 ? 350 : 50;
-                                            var rect = new RectangularPolygon(x - 10, y - 10, img.Width + 20, img.Height + 20);
+                                            var blackFarmeRect = new RectangularPolygon(x - 11, y - 11, img.Width + 22, img.Height + 22);
+                                            var backgroundColorRect = new RectangularPolygon(x - 10, y - 10, img.Width + 20, img.Height + 20);
+
+                                            image.Mutate((act) => act.Fill(Color.FromRgb(0, 0, 0), blackFarmeRect));
 
                                             switch (item.StarGrade)
                                             {
                                                 case 1:
-                                                    image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), rect));
+                                                    image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), backgroundColorRect));
                                                     break;
                                                 case 2:
-                                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), rect));
+                                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), backgroundColorRect));
                                                     break;
                                                 case 3 when !pickUpStudentList.Any((x) => x.Id == item.Id):
-                                                    image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), rect));
+                                                    image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), backgroundColorRect));
                                                     break;
                                                 case 3 when pickUpStudentList.Any((x) => x.Id == item.Id):
-                                                    var brush = new PathGradientBrush(rect.Points.ToArray(), colors, Color.White);
+                                                    var brush = new PathGradientBrush(backgroundColorRect.Points.ToArray(), colors, Color.White);
                                                     image.Mutate((act) => act.Fill(brush));
                                                     break;
                                             }
