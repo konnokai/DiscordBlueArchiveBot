@@ -35,13 +35,13 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         public class Campaign
         {
             [JsonProperty("Id")]
-            public int? Id { get; set; }
+            public int Id { get; set; }
 
             [JsonProperty("Difficulty")]
-            public int? Difficulty { get; set; }
+            public int Difficulty { get; set; }
 
             [JsonProperty("Area")]
-            public int? Area { get; set; }
+            public int Area { get; set; }
 
             [JsonProperty("Stage")]
             public object Stage { get; set; }
@@ -68,10 +68,10 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string NameVi { get; set; }
 
             [JsonProperty("EntryCost")]
-            public List<List<int?>> EntryCost { get; set; }
+            public List<List<int>> EntryCost { get; set; }
 
             [JsonProperty("StarCondition")]
-            public List<int?> StarCondition { get; set; }
+            public List<int> StarCondition { get; set; }
 
             [JsonProperty("ChallengeCondition")]
             public List<List<object>> ChallengeCondition { get; set; }
@@ -80,7 +80,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string Terrain { get; set; }
 
             [JsonProperty("Level")]
-            public int? Level { get; set; }
+            public int Level { get; set; }
 
             [JsonProperty("Rewards")]
             public Rewards Rewards { get; set; }
@@ -98,7 +98,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         public class Conquest
         {
             [JsonProperty("Id")]
-            public int? Id { get; set; }
+            public int Id { get; set; }
 
             [JsonProperty("NameEn")]
             public string NameEn { get; set; }
@@ -122,7 +122,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string NameVi { get; set; }
 
             [JsonProperty("EventId")]
-            public int? EventId { get; set; }
+            public int EventId { get; set; }
 
             [JsonProperty("Formations")]
             public List<Formation> Formations { get; set; }
@@ -131,7 +131,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string Difficulty { get; set; }
 
             [JsonProperty("Level")]
-            public int? Level { get; set; }
+            public int Level { get; set; }
 
             [JsonProperty("EnemyType")]
             public string EnemyType { get; set; }
@@ -140,19 +140,19 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string Terrain { get; set; }
 
             [JsonProperty("Step")]
-            public int? Step { get; set; }
+            public int Step { get; set; }
 
             [JsonProperty("Team")]
             public string Team { get; set; }
 
             [JsonProperty("SubStage")]
-            public bool? SubStage { get; set; }
+            public bool SubStage { get; set; }
 
             [JsonProperty("StarCondition")]
-            public List<int?> StarCondition { get; set; }
+            public List<int> StarCondition { get; set; }
 
             [JsonProperty("EntryCost")]
-            public List<List<int?>> EntryCost { get; set; }
+            public List<List<int>> EntryCost { get; set; }
 
             [JsonProperty("SchoolBuff")]
             public List<List<string>> SchoolBuff { get; set; }
@@ -164,7 +164,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         public class ConquestMap
         {
             [JsonProperty("EventId")]
-            public int? EventId { get; set; }
+            public int EventId { get; set; }
 
             [JsonProperty("Maps")]
             public List<Map> Maps { get; set; }
@@ -173,16 +173,16 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         public class Event
         {
             [JsonProperty("Id")]
-            public int? Id { get; set; }
+            public int Id { get; set; }
 
             [JsonProperty("EventId")]
-            public int? EventId { get; set; }
+            public int EventId { get; set; }
 
             [JsonProperty("Difficulty")]
-            public int? Difficulty { get; set; }
+            public int Difficulty { get; set; }
 
             [JsonProperty("Stage")]
-            public int? Stage { get; set; }
+            public string Stage { get; set; }
 
             [JsonProperty("NameEn")]
             public string NameEn { get; set; }
@@ -206,10 +206,10 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string NameVi { get; set; }
 
             [JsonProperty("EntryCost")]
-            public List<List<int?>> EntryCost { get; set; }
+            public List<List<int>> EntryCost { get; set; }
 
             [JsonProperty("StarCondition")]
-            public List<int?> StarCondition { get; set; }
+            public List<int> StarCondition { get; set; }
 
             [JsonProperty("ChallengeCondition")]
             public List<List<object>> ChallengeCondition { get; set; }
@@ -218,7 +218,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string Terrain { get; set; }
 
             [JsonProperty("Level")]
-            public int? Level { get; set; }
+            public int Level { get; set; }
 
             [JsonProperty("Rewards")]
             public Rewards Rewards { get; set; }
@@ -236,7 +236,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         public class Formation
         {
             [JsonProperty("Id")]
-            public int? Id { get; set; }
+            public int Id { get; set; }
 
             [JsonProperty("MapIcon")]
             public string MapIcon { get; set; }
@@ -248,13 +248,13 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string UnitGrade { get; set; }
 
             [JsonProperty("Level")]
-            public List<int?> Level { get; set; }
+            public List<int> Level { get; set; }
 
             [JsonProperty("Grade")]
-            public List<int?> Grade { get; set; }
+            public List<int> Grade { get; set; }
 
             [JsonProperty("EnemyList")]
-            public List<int?> EnemyList { get; set; }
+            public List<int> EnemyList { get; set; }
         }
 
         public class HexaMap
@@ -263,10 +263,10 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string Type { get; set; }
 
             [JsonProperty("Pos")]
-            public List<int?> Pos { get; set; }
+            public List<int> Pos { get; set; }
 
             [JsonProperty("Entity")]
-            public int? Entity { get; set; }
+            public int Entity { get; set; }
 
             [JsonProperty("Target")]
             public int? Target { get; set; }
@@ -281,7 +281,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string Name { get; set; }
 
             [JsonProperty("Step")]
-            public int? Step { get; set; }
+            public int Step { get; set; }
 
             [JsonProperty("Difficulty")]
             public string Difficulty { get; set; }
@@ -293,52 +293,52 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         public class Rewards
         {
             [JsonProperty("Default")]
-            public List<List<double?>> Default { get; set; }
+            public List<List<double>> Default { get; set; }
 
             [JsonProperty("FirstClear")]
-            public List<List<int?>> FirstClear { get; set; }
+            public List<List<int>> FirstClear { get; set; }
 
             [JsonProperty("ThreeStar")]
-            public List<List<int?>> ThreeStar { get; set; }
+            public List<List<int>> ThreeStar { get; set; }
 
             [JsonProperty("Calculate")]
-            public List<List<List<int?>>> Calculate { get; set; }
+            public List<List<List<int>>> Calculate { get; set; }
         }
 
         public class RewardsGlobal
         {
             [JsonProperty("Default")]
-            public List<List<double?>> Default { get; set; }
+            public List<List<double>> Default { get; set; }
 
             [JsonProperty("FirstClear")]
-            public List<List<int?>> FirstClear { get; set; }
+            public List<List<int>> FirstClear { get; set; }
 
             [JsonProperty("ThreeStar")]
-            public List<List<int?>> ThreeStar { get; set; }
+            public List<List<int>> ThreeStar { get; set; }
         }
 
         public class SchoolDungeon
         {
             [JsonProperty("Id")]
-            public int? Id { get; set; }
+            public int Id { get; set; }
 
             [JsonProperty("Type")]
             public string Type { get; set; }
 
             [JsonProperty("Stage")]
-            public int? Stage { get; set; }
+            public int Stage { get; set; }
 
             [JsonProperty("EntryCost")]
-            public List<List<int?>> EntryCost { get; set; }
+            public List<List<int>> EntryCost { get; set; }
 
             [JsonProperty("StarCondition")]
-            public List<int?> StarCondition { get; set; }
+            public List<int> StarCondition { get; set; }
 
             [JsonProperty("Terrain")]
             public string Terrain { get; set; }
 
             [JsonProperty("Level")]
-            public int? Level { get; set; }
+            public int Level { get; set; }
 
             [JsonProperty("Rewards")]
             public Rewards Rewards { get; set; }
@@ -356,34 +356,34 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public string Type { get; set; }
 
             [JsonProperty("Pos")]
-            public List<int?> Pos { get; set; }
+            public List<int> Pos { get; set; }
 
             [JsonProperty("StageId")]
-            public int? StageId { get; set; }
+            public int StageId { get; set; }
         }
 
         public class WeekDungeon
         {
             [JsonProperty("Id")]
-            public int? Id { get; set; }
+            public int Id { get; set; }
 
             [JsonProperty("Type")]
             public string Type { get; set; }
 
             [JsonProperty("Stage")]
-            public int? Stage { get; set; }
+            public int Stage { get; set; }
 
             [JsonProperty("EntryCost")]
-            public List<List<int?>> EntryCost { get; set; }
+            public List<List<int>> EntryCost { get; set; }
 
             [JsonProperty("StarCondition")]
-            public List<int?> StarCondition { get; set; }
+            public List<int> StarCondition { get; set; }
 
             [JsonProperty("Terrain")]
             public string Terrain { get; set; }
 
             [JsonProperty("Level")]
-            public int? Level { get; set; }
+            public int Level { get; set; }
 
             [JsonProperty("Rewards")]
             public Rewards Rewards { get; set; }
