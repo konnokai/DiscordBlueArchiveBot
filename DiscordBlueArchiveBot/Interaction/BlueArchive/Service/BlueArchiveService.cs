@@ -247,6 +247,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 IsRefreshingData = true;
 
                 _eventDatas.Clear();
+                JPPickUpDatas.Clear();
+                GlobalPickUpDatas.Clear();
 
                 _common = await GetDataFromServerAsync<CommonJson>();
                 _stages = await GetDataFromServerAsync<StagesJson>();
