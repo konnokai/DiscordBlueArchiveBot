@@ -254,34 +254,28 @@ namespace DiscordBlueArchiveBot
 
         public static void ChangeStatus()
         {
-            Action<string> setGame = new Action<string>(async (text) =>
+            Task.Run(async () =>
             {
-                try
+                switch (Status)
                 {
-                    await _client.SetGameAsync($"{text}", type: ActivityType.Playing);
+                    case BotPlayingStatus.Guild:
+                        await _client.SetCustomStatusAsync($"在 {_client.Guilds.Count} 個伺服器");
+                        Status = BotPlayingStatus.Member;
+                        break;
+                    case BotPlayingStatus.Member:
+                        try
+                        {
+                            await _client.SetCustomStatusAsync($"服務 {_client.Guilds.Sum((x) => x.MemberCount)} 個成員");
+                            Status = BotPlayingStatus.Info;
+                        }
+                        catch (Exception) { Status = BotPlayingStatus.Info; ChangeStatus(); }
+                        break;
+                    case BotPlayingStatus.Info:
+                        await _client.SetCustomStatusAsync("去玩檔案啦");
+                        Status = BotPlayingStatus.Guild;
+                        break;
                 }
-                catch (Exception) { }
             });
-
-            switch (Status)
-            {
-                case BotPlayingStatus.Guild:
-                    setGame($"在 {_client.Guilds.Count} 個伺服器");
-                    Status = BotPlayingStatus.Member;
-                    break;
-                case BotPlayingStatus.Member:
-                    try
-                    {
-                        setGame($"服務 {_client.Guilds.Sum((x) => x.MemberCount)} 個成員");
-                        Status = BotPlayingStatus.Info;
-                    }
-                    catch (Exception) { Status = BotPlayingStatus.Info; ChangeStatus(); }
-                    break;
-                case BotPlayingStatus.Info:
-                    setGame("去玩檔案啦");
-                    Status = BotPlayingStatus.Guild;
-                    break;
-            }
         }
 
         public static string GetDataFilePath(string fileName)
