@@ -25,7 +25,7 @@ namespace DiscordBlueArchiveBot
         public static bool isConnect = false, isDisconnect = false, isNeedRegisterAppCommand = false;
         static Timer timerUpdateStatus;
         static readonly BotConfig botConfig = new();
-        public enum BotPlayingStatus { Guild, Member, Info }
+        public enum BotPlayingStatus { Guild, Member, RollInfo, Info }
 
         static async Task Main(string[] args)
         {
@@ -266,9 +266,26 @@ namespace DiscordBlueArchiveBot
                         try
                         {
                             await _client.SetCustomStatusAsync($"服務 {_client.Guilds.Sum((x) => x.MemberCount)} 個成員");
-                            Status = BotPlayingStatus.Info;
+                            Status = BotPlayingStatus.RollInfo;
                         }
-                        catch (Exception) { Status = BotPlayingStatus.Info; ChangeStatus(); }
+                        catch (Exception) { Status = BotPlayingStatus.RollInfo; ChangeStatus(); }
+                        break;
+                    case BotPlayingStatus.RollInfo:
+                        using (var db = DataBase.MainDbContext.GetDbContext())
+                        {
+                            var totalGachaCount = db.UserGachaRecord.Sum(x => x.TotalGachaCount);
+                            var totalThreeStarCount = db.UserGachaRecord.Sum(x => x.ThreeStarCount);
+                            var totalPickUpCount = db.UserGachaRecord.Sum(x => x.PickUpCount);
+
+                            double threeStartPercentage = totalThreeStarCount == 0 ? 0 : Math.Round((double)totalThreeStarCount / totalGachaCount * 100, 2);
+                            double pickUpPercentage = totalPickUpCount == 0 ? 0 : Math.Round((double)totalPickUpCount / totalGachaCount * 100, 2);
+
+                            await _client.SetCustomStatusAsync($"總抽卡人數: {db.UserGachaRecord.Count()}, " +
+                                $"總抽卡次數: {totalGachaCount}, " +
+                                $"三星率: {threeStartPercentage}%, " +
+                                $"PickUp率: {pickUpPercentage}%");
+                        }
+                        Status = BotPlayingStatus.Info;
                         break;
                     case BotPlayingStatus.Info:
                         await _client.SetCustomStatusAsync("去玩檔案啦");
