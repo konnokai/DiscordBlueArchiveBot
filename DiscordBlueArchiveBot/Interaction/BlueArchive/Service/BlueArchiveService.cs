@@ -313,7 +313,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                     foreach (var item in jpCurrentRegionsData.CurrentEvents)
                     {
+                        bool isRetro = false;
                         string jpNowEventName = "";
+
+                        if (item.Event >= 10000)
+                        {
+                            isRetro = true;
+                            item.Event -= 10000;
+                        }
+
                         if (_jpLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out jpNowEventName)) { }
                         else if (_stages.Events.Any((x) => x.EventId == item.Event))
                         {
@@ -324,6 +332,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             Log.Warn($"JP No Event Data: {item.Event} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                             continue;
                         }
+
+                        if (isRetro)
+                            jpNowEventName += " (復刻)";
 
                         Log.Info($"JP Now Event: {jpNowEventName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                         _eventDatas.Add(new EventData(RegionType.Japan, NotifyType.Event, jpNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
@@ -359,7 +370,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                     foreach (var item in globalCurrentRegionsData.CurrentEvents)
                     {
+                        bool isRetro = false;
                         string globalNowEventName = "";
+
+                        if (item.Event >= 10000)
+                        {
+                            isRetro = true;
+                            item.Event -= 10000;
+                        }
+
                         if (_twLocalizations.Data["EventName"].TryGetValue(item.Event.ToString(), out globalNowEventName)) { }
                         else if (_stages.Events.Any((x) => x.EventId == item.Event))
                         {
@@ -370,6 +389,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             Log.Warn($"Global No Event Data: {item.Event} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                             continue;
                         }
+
+                        if (isRetro)
+                            globalNowEventName += " (復刻)";
 
                         Log.Info($"Global Now Event: {globalNowEventName} ({ConvertTimestampToDatetime(item.Start)} ~ {ConvertTimestampToDatetime(item.End)})");
                         _eventDatas.Add(new EventData(RegionType.Global, NotifyType.Event, globalNowEventName, ConvertTimestampToDatetime(item.Start), ConvertTimestampToDatetime(item.End)));
