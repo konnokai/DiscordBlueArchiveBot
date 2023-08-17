@@ -325,7 +325,29 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Roll - 資料庫保存失敗");
+                Log.Error(ex, "Roll - UserGachaRecord 資料庫保存失敗");
+            }
+
+            try
+            {
+                using (var db = DataBase.MainDbContext.GetDbContext())
+                {
+                    foreach (var item in rollStudentList)
+                    {
+                        var userGacheCharacterRecord = db.UserGacheCharacterRecord.SingleOrDefault((x) => x.UserId == Context.User.Id && x.CharacterId == item.Id);
+                        if (userGacheCharacterRecord == null)
+                            userGacheCharacterRecord = new UserGacheCharacterRecord() { UserId = Context.User.Id, CharacterId = item.Id };
+
+                        userGacheCharacterRecord.Num += 1;
+
+                        db.UserGacheCharacterRecord.Update(userGacheCharacterRecord);
+                        await db.SaveChangesAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Roll - UserGacheCharacterRecord 資料庫保存失敗");
             }
 
             if (!Debugger.IsAttached)

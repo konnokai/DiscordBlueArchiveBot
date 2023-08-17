@@ -9,6 +9,7 @@ namespace DiscordBlueArchiveBot.DataBase
         public DbSet<NotifyConfig> NotifyConfig { get; set; }
         public DbSet<CafeInviteTicketUpdateTime> CafeInviteTicketUpdateTime { get; set; }
         public DbSet<UserGachaRecord> UserGachaRecord { get; set; }
+        public DbSet<UserGacheCharacterRecord> UserGacheCharacterRecord { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite($"Data Source={Program.GetDataFilePath("DataBase.db")}")
