@@ -583,6 +583,10 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             {
                 Log.Error(discordEx, $"向 {userId} 發送訊息 `{message}` 失敗");
             }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"向 {userId} 發送訊息 `{message}` 失敗，未知的錯誤");
+            }
         }
 
 
