@@ -457,13 +457,22 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     // 活動 & 總力 & 協同
                     case 18:
                         {
-                            await SendEventNotifyAsync(db, RegionType.Japan, NotifyType.Event);
-                            await SendEventNotifyAsync(db, RegionType.Japan, NotifyType.Raid);
-                            await SendEventNotifyAsync(db, RegionType.Japan, NotifyType.TimeAttack);
+                            // 先統計有哪些需要通知
+                            Dictionary<ulong, List<string>> notifyDic = new();
 
-                            await SendEventNotifyAsync(db, RegionType.Global, NotifyType.Event);
-                            await SendEventNotifyAsync(db, RegionType.Global, NotifyType.Raid);
-                            await SendEventNotifyAsync(db, RegionType.Global, NotifyType.TimeAttack);
+                            GetEventNotifyAsync(db, RegionType.Japan, NotifyType.Event, ref notifyDic);
+                            GetEventNotifyAsync(db, RegionType.Japan, NotifyType.Raid, ref notifyDic);
+                            GetEventNotifyAsync(db, RegionType.Japan, NotifyType.TimeAttack, ref notifyDic);
+
+                            GetEventNotifyAsync(db, RegionType.Global, NotifyType.Event, ref notifyDic);
+                            GetEventNotifyAsync(db, RegionType.Global, NotifyType.Raid, ref notifyDic);
+                            GetEventNotifyAsync(db, RegionType.Global, NotifyType.TimeAttack, ref notifyDic);
+
+                            // 再一次性的發送
+                            foreach (var item in notifyDic)
+                            {
+                                await _client.SendMessageToDMChannel(item.Key, string.Join("\n\n", item.Value));
+                            }
                             break;
                         }
                     default:
@@ -472,7 +481,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             }
         }
 
-        private async Task SendEventNotifyAsync(DataBase.MainDbContext db, RegionType regionType, NotifyType notifyType)
+        private void GetEventNotifyAsync(DataBase.MainDbContext db, RegionType regionType, NotifyType notifyType, ref Dictionary<ulong, List<string>> dic)
         {
             EventData eventData;
             if ((eventData = _eventDatas.FirstOrDefault((x) => x.RegionType == regionType && x.EventType == notifyType && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now)) != null)
@@ -499,7 +508,10 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.RegionTypeId == regionType && (x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == notifyType)).Distinct((x) => x.UserId))
                 {
-                    await _client.SendMessageToDMChannel(item.UserId, message);
+                    if (!dic.ContainsKey(item.UserId))
+                        dic.Add(item.UserId, new List<string> { message });
+                    else
+                        dic[item.UserId].Add(message);
                 }
             }
         }
