@@ -69,5 +69,15 @@ namespace DiscordBlueArchiveBot.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   查詢類型 System.Byte[] 的當地語系化資源。
+        /// </summary>
+        internal static byte[] U_OTF_ShinMGoUpr_Medium {
+            get {
+                object obj = ResourceManager.GetObject("U-OTF-ShinMGoUpr-Medium", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

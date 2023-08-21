@@ -121,4 +121,7 @@
   <data name="Event_Main_Stage_Bg" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resource\Event_Main_Stage_Bg.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="U-OTF-ShinMGoUpr-Medium" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Assets\U-OTF-ShinMGoUpr-Medium.otf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>
