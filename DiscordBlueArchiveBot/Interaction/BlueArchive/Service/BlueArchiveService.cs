@@ -425,7 +425,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.BirthdayStudent).Distinct((x) => x.UserId))
                                 {
-                                    await _client.SendMessageToDMChannel(item.UserId, 
+                                    await _client.SendMessageToDMChannelAsync(item.UserId, 
                                         $"今天是 `{string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}` 的生日!", 
                                         $"https://schale.gg/images/student/collection/{birthdayStudent.First().CollectionTexture}.webp");
                                 }
@@ -435,14 +435,14 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         // 咖啡廳換人
                         foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.CafeInterviewChange).Distinct((x) => x.UserId))
                         {
-                            await _client.SendMessageToDMChannel(item.UserId, "咖啡廳已換人!");
+                            await _client.SendMessageToDMChannelAsync(item.UserId, "咖啡廳已換人!");
                         }
                         break;
                     // PVP 獎勵
                     case 13:
                         foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.PVPAward).Distinct((x) => x.UserId))
                         {
-                            await _client.SendMessageToDMChannel(item.UserId, "可以領PVP獎勵了\n" +
+                            await _client.SendMessageToDMChannelAsync(item.UserId, "可以領PVP獎勵了\n" +
                                 "記得先把排名打上去再領!!!");
                         }
                         break;
@@ -450,7 +450,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     case 17:
                         foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.NightLogin).Distinct((x) => x.UserId))
                         {
-                            await _client.SendMessageToDMChannel(item.UserId, "可以登入領晚上送的體力了\n" +
+                            await _client.SendMessageToDMChannelAsync(item.UserId, "可以登入領晚上送的體力了\n" +
                                 "記得順便領咖啡廳的體力!");
                         }
                         break;
@@ -460,18 +460,18 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                             // 先統計有哪些需要通知
                             Dictionary<ulong, List<string>> notifyDic = new();
 
-                            GetEventNotifyAsync(db, RegionType.Japan, NotifyType.Event, ref notifyDic);
-                            GetEventNotifyAsync(db, RegionType.Japan, NotifyType.Raid, ref notifyDic);
-                            GetEventNotifyAsync(db, RegionType.Japan, NotifyType.TimeAttack, ref notifyDic);
+                            GetEventNotify(db, RegionType.Japan, NotifyType.Event, ref notifyDic);
+                            GetEventNotify(db, RegionType.Japan, NotifyType.Raid, ref notifyDic);
+                            GetEventNotify(db, RegionType.Japan, NotifyType.TimeAttack, ref notifyDic);
 
-                            GetEventNotifyAsync(db, RegionType.Global, NotifyType.Event, ref notifyDic);
-                            GetEventNotifyAsync(db, RegionType.Global, NotifyType.Raid, ref notifyDic);
-                            GetEventNotifyAsync(db, RegionType.Global, NotifyType.TimeAttack, ref notifyDic);
+                            GetEventNotify(db, RegionType.Global, NotifyType.Event, ref notifyDic);
+                            GetEventNotify(db, RegionType.Global, NotifyType.Raid, ref notifyDic);
+                            GetEventNotify(db, RegionType.Global, NotifyType.TimeAttack, ref notifyDic);
 
                             // 再一次性的發送
                             foreach (var item in notifyDic)
                             {
-                                await _client.SendMessageToDMChannel(item.Key, string.Join("\n\n", item.Value));
+                                await _client.SendMessageToDMChannelAsync(item.Key, string.Join("\n\n", item.Value));
                             }
                             break;
                         }
@@ -481,7 +481,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             }
         }
 
-        private void GetEventNotifyAsync(DataBase.MainDbContext db, RegionType regionType, NotifyType notifyType, ref Dictionary<ulong, List<string>> dic)
+        private void GetEventNotify(DataBase.MainDbContext db, RegionType regionType, NotifyType notifyType, ref Dictionary<ulong, List<string>> dic)
         {
             EventData eventData;
             if ((eventData = _eventDatas.FirstOrDefault((x) => x.RegionType == regionType && x.EventType == notifyType && x.StartAt <= DateTime.Now && x.EndAt > DateTime.Now)) != null)
@@ -528,7 +528,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                     Log.Info($"向 {item.UserId} 發送 {region} 邀請券更新通知");
 
-                    await _client.SendMessageToDMChannel(item.UserId, $"{region}的咖啡廳邀請券已更新!", componentBuilder.Build());
+                    await _client.SendMessageToDMChannelAsync(item.UserId, $"{region}的咖啡廳邀請券已更新!", componentBuilder.Build());
 
                     db.CafeInviteTicketUpdateTime.Remove(item);
                     await db.SaveChangesAsync();
@@ -579,7 +579,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
     public static class Ext
     {
-        public static async Task SendMessageToDMChannel(this DiscordSocketClient client, ulong userId, string message, MessageComponent component = null)
+        public static async Task SendMessageToDMChannelAsync(this DiscordSocketClient client, ulong userId, string message, MessageComponent component = null)
         {
             try
             {
@@ -602,7 +602,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         }
 
 
-        public static async Task SendMessageToDMChannel(this DiscordSocketClient client, ulong userId, string message, string thumbnailUrl)
+        public static async Task SendMessageToDMChannelAsync(this DiscordSocketClient client, ulong userId, string message, string thumbnailUrl)
         {
             try
             {
