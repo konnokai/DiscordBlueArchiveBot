@@ -388,15 +388,13 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 
         private Student GetRandomStudentFromStarGrade(int starGrade, RegionType regionType)
         {
-            List<Student> tempStudentList;
-            if (regionType == RegionType.Japan)
-            {
-                tempStudentList = _service.Students.Where((x) => x.StarGrade == starGrade && !_service.EventStudents.Any((x2) => x.Id == x2) && x.IsLimited == 0).ToList();
-            }
-            else
-            {
-                tempStudentList = _service.Students.Where((x) => x.StarGrade == starGrade && !_service.EventStudents.Any((x2) => x.Id == x2) && x.IsLimited == 0 && x.IsReleased.Last()).ToList();
-            }
+            List<Student> tempStudentList = _service.Students
+                .Where((x) =>
+                    x.StarGrade == starGrade &&
+                    !_service.EventStudents.Any((x2) => x.Id == x2) &&
+                    x.IsLimited == 0 &&
+                    (regionType == RegionType.Japan || x.IsReleased.Last()))
+                .ToList();
 
             return tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)];
         }
