@@ -3,6 +3,7 @@
 using DiscordBlueArchiveBot.DataBase.Table;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.Fonts;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -24,10 +25,12 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         public List<Student> Students => _students?.Data;
         public List<Student> JPPickUpDatas { get; private set; } = new();
         public List<Student> GlobalPickUpDatas { get; private set; } = new();
+        public Font JPGameFont { get; private set; }
 
         private readonly DiscordSocketClient _client;
         private readonly HttpClient _httpClient;
         private readonly Timer _refreshTimer, _notify, _notifyCafeInviteTicketUpdateTimer;
+
         private CommonJson _common = null;
         private StagesJson _stages = null;
         private StudentsJson _students = null;
@@ -36,6 +39,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         private RaidsJson _twRaids = null;
         private LocalizationJson _twLocalizations = null;
         private ConcurrentBag<EventData> _eventDatas = new();
+
+        private FontCollection _fontCollection = new();
+        private FontFamily _family;
 
         public BlueArchiveService(DiscordSocketClient client, IHttpClientFactory httpClientFactory)
         {
@@ -46,6 +52,10 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             _notifyCafeInviteTicketUpdateTimer = new Timer(new TimerCallback(async (obj) => await NotifyCafeInviteTicketUpdateAsync()), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
 
             _client.ButtonExecuted += _client_ButtonExecuted;
+
+            // Export From Game Obb
+            _family = _fontCollection.Add(new MemoryStream(Properties.Resources.U_OTF_ShinMGoUpr_Medium));
+            JPGameFont = _family.CreateFont(28, FontStyle.Regular);
         }
 
         public string GetStudentAvatarPath(int id)
@@ -425,8 +435,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                                 foreach (var item in db.NotifyConfig.AsNoTracking().Where((x) => x.NotifyTypeId == NotifyType.All || x.NotifyTypeId == NotifyType.BirthdayStudent).Distinct((x) => x.UserId))
                                 {
-                                    await _client.SendMessageToDMChannelAsync(item.UserId, 
-                                        $"今天是 `{string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}` 的生日!", 
+                                    await _client.SendMessageToDMChannelAsync(item.UserId,
+                                        $"今天是 `{string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}` 的生日!",
                                         $"https://schale.gg/images/student/collection/{birthdayStudent.First().CollectionTexture}.webp");
                                 }
                             }

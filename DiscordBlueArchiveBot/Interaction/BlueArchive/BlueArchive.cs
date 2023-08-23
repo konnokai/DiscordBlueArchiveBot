@@ -4,10 +4,15 @@ using DiscordBlueArchiveBot.Interaction.Attribute;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.Fonts;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using StackExchange.Redis;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
+using Color = SixLabors.ImageSharp.Color;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 {
@@ -397,6 +402,92 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 .ToList();
 
             return tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)];
+        }
+
+        [SlashCommand("show-student", "顯示已抽到的學生數量")]
+        public async Task ShowStudent([Summary("user", "顯示特定使用者的學生")] IUser? user = null)
+        {
+            await DeferAsync();
+
+            if (user == null)
+                user = Context.User;
+
+            using var db = DataBase.MainDbContext.GetDbContext();
+            var userGacheCharacterRecords = db.UserGacheCharacterRecord.Where((x) => x.UserId == user.Id);
+            if (!userGacheCharacterRecords.Any())
+            {
+                await Context.Interaction.SendErrorAsync("無紀錄", true);
+                return;
+            }
+
+            var needRenderStudentDic = new Dictionary<Student, int>();
+            foreach (var userGacheCharacterRecord in userGacheCharacterRecords)
+            {
+                var student = _service.Students.SingleOrDefault((x) => x.Id == userGacheCharacterRecord.CharacterId);
+                if (student == null)
+                {
+                    Log.Warn($"ShowStudent: {userGacheCharacterRecord.CharacterId} 無資料");
+                    continue;
+                }
+
+                needRenderStudentDic.Add(student, userGacheCharacterRecord.Num);
+            }
+
+            needRenderStudentDic = new(needRenderStudentDic.OrderByDescending((x) => x.Key.StarGrade).ThenByDescending((x) => x.Value).ThenByDescending(x => x.Key.IsLimited));
+
+            using var memoryStream = new MemoryStream();
+            using (var image = new Image<Rgba32>(1920, 1054, new Color(new Rgb24(33, 37, 41))))
+            {
+                // https://docs.sixlabors.com/articles/imagesharp.drawing/gettingstarted.html#expanded-example-1
+                TextOptions textOptions = new(_service.JPGameFont)
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+
+                // https://github.com/SixLabors/ImageSharp.Drawing/issues/38#issuecomment-877788789
+                DrawingOptions drawingOptions = new()
+                {
+                    GraphicsOptions = new GraphicsOptions { BlendPercentage = .8F }
+                };
+
+                int index = 0;
+                foreach (var item in needRenderStudentDic.Take(32))
+                {
+                    using (var img = Image.Load(_service.GetStudentAvatarPath(item.Key.Id)))
+                    {
+                        // 圖片長寬 200 * 226，一列畫8個人應該差不多
+                        int x = 40 + (img.Width + 35) * (index % 8);
+                        int y = 50 + (index <= 7 ? 0 : 250 * (index / 8));
+
+                        // 角色圖繪製
+                        image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+
+                        // 名稱背景繪製
+                        image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(40, 40, 40)), new RectangleF(x, y + img.Height - 40, img.Width, 40)));
+
+                        // 名稱文字繪製
+                        textOptions.Origin = new PointF(x + (float)(img.Width / 2), y + img.Height - 5);
+                        image.Mutate((act) => act.DrawText(textOptions, item.Key.StudentName.Replace("（", "(").Replace("）", ")"), Color.White));
+
+                        // 持有量背景繪製
+                        image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(40, 40, 40)), new RectangleF(x, y, 80, 40)));
+
+                        // 持有量文字繪製
+                        textOptions.Origin = new PointF(x + 40, y + 35);
+                        image.Mutate((act) => act.DrawText(textOptions, item.Value.ToString(), Color.White));
+
+                        index++;
+                    }
+                }
+
+                image.Save(memoryStream, new JpegEncoder());
+            }
+
+            var eb = new EmbedBuilder()
+                .WithImageUrl("attachment://image.jpg");
+
+            await FollowupWithFileAsync(memoryStream, "image.jpg", embed: eb.Build());
         }
     }
 }
