@@ -517,12 +517,16 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 if (valve.HasValue)
                 {
                     var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve!)!;
-                    double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
-                    double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount * 100, 2);
+                    int threeStarCount = needRenderStudentDic.Sum((x) => x.Key.StarGrade == 3 ? x.Value : 0);
+                    int limitCount = needRenderStudentDic.Sum((x) => x.Key.IsLimited == 1 ? x.Value : 0);
+
+                    double threeStartPercentage = threeStarCount == 0 ? 0 : Math.Round((double)threeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
+                    double limitCountPercentage = limitCount == 0 ? 0 : Math.Round((double)limitCount / userGachaRecord.TotalGachaCount * 100, 2);
 
                     description += $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
-                        $"三星數: {userGachaRecord.ThreeStarCount} ({threeStartPercentage}%)\n" +
-                        $"PickUp數: {userGachaRecord.PickUpCount} ({pickUpPercentage}%)";
+                        $"總學生數: {needRenderStudentDic.Count()} (不含重複)\n" +
+                        $"三星數: {threeStarCount} ({threeStartPercentage}%)\n" +
+                        $"限定數: {limitCount} ({limitCountPercentage}%)";
                 }
             }
             catch (Exception ex)
