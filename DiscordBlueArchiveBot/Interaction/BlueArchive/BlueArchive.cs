@@ -5,10 +5,10 @@ using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.Fonts;
+using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using StackExchange.Redis;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
@@ -460,6 +460,31 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                         // 圖片長寬 200 * 226，一列畫8個人應該差不多
                         int x = 40 + (img.Width + 35) * (index % 8);
                         int y = 50 + (index <= 7 ? 0 : 250 * (index / 8));
+
+                        // 繪製星級邊框
+                        Color[] colors =
+                        {
+                            Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
+                            Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
+                        };
+
+                        var backgroundColorRect = new RectangularPolygon(x - 5, y - 5, img.Width + 10, img.Height + 10);
+                        switch (item.Key.StarGrade)
+                        {
+                            case 1:
+                                image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), backgroundColorRect));
+                                break;
+                            case 2:
+                                image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), backgroundColorRect));
+                                break;
+                            case 3 when item.Key.IsLimited == 0:
+                                image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), backgroundColorRect));
+                                break;
+                            case 3 when item.Key.IsLimited == 1:
+                                var brush = new PathGradientBrush(backgroundColorRect.Points.ToArray(), colors, Color.White);
+                                image.Mutate((act) => act.Fill(brush));
+                                break;
+                        }
 
                         // 角色圖繪製
                         image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
