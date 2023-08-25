@@ -434,7 +434,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 needRenderStudentDic.Add(student, userGacheCharacterRecord.Num);
             }
 
-            needRenderStudentDic = new(needRenderStudentDic.OrderByDescending((x) => x.Key.StarGrade).ThenByDescending((x) => x.Value).ThenByDescending(x => x.Key.IsLimited));
+            needRenderStudentDic = new(needRenderStudentDic.OrderByDescending((x) => x.Key.StarGrade).ThenByDescending(x => x.Key.IsLimited).ThenByDescending((x) => x.Value));
 
             using var memoryStream = new MemoryStream();
             using (var image = new Image<Rgba32>(1920, 1054, new Color(new Rgb24(33, 37, 41))))
