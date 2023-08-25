@@ -8,6 +8,7 @@ using SixLabors.Fonts;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using StackExchange.Redis;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
@@ -484,7 +485,28 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 image.Save(memoryStream, new JpegEncoder());
             }
 
+            string description = "";
+            try
+            {
+                var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(user.Id.ToString()));
+                if (valve.HasValue)
+                {
+                    var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve!)!;
+                    double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
+                    double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount * 100, 2);
+
+                    description += $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
+                        $"三星數: {userGachaRecord.ThreeStarCount} ({threeStartPercentage}%)\n" +
+                        $"PickUp數: {userGachaRecord.PickUpCount} ({pickUpPercentage}%)";
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "ShowStudent - Redis 存取失敗");
+            }
+
             var eb = new EmbedBuilder()
+                .WithDescription(description)
                 .WithImageUrl("attachment://image.jpg");
 
             await FollowupWithFileAsync(memoryStream, "image.jpg", embed: eb.Build());
