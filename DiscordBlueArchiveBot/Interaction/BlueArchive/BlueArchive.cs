@@ -242,14 +242,14 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
         {
             if (_service.IsRefreshingData)
             {
-                await Context.Interaction.SendErrorAsync("資料尚未初始化，請稍後再試");
+                await Context.Interaction.SendErrorAsync("資料正在重整中，請稍後再試");
                 return;
             }
 
             if (await Program.RedisDb.KeyExistsAsync($"bluearchive:gachaExpire:{Context.User.Id}"))
             {
                 var rollExpireTime = await Program.RedisDb.KeyExpireTimeAsync($"bluearchive:gachaExpire:{Context.User.Id}");
-                await Context.Interaction.SendErrorAsync($"還在冷卻，剩餘時間: {rollExpireTime.Value.AddHours(8).Subtract(DateTime.Now):hh\\時mm\\分ss\\秒}");
+                await Context.Interaction.SendErrorAsync($"還在冷卻，剩餘時間: {rollExpireTime.Value.Subtract(DateTime.Now.AddHours(-8)):hh\\時mm\\分ss\\秒}");
                 return;
             }
 
