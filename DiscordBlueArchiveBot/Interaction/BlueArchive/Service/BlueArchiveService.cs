@@ -30,6 +30,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         private readonly DiscordSocketClient _client;
         private readonly HttpClient _httpClient;
         private readonly Timer _refreshTimer, _notify, _notifyCafeInviteTicketUpdateTimer;
+        private readonly ConcurrentDictionary<ulong, ReminderItem> reminders = new ConcurrentDictionary<ulong, ReminderItem>();
 
         private CommonJson _common = null;
         private StagesJson _stages = null;
@@ -80,127 +81,33 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                 return;
                             }
 
-                            int maxStudentStarGrade = 1;
                             try
                             {
                                 var pickUpStudentList = customId[1] == "0" ? JPPickUpDatas : GlobalPickUpDatas;
+                                var userId = ulong.Parse(customId[2]);
                                 string[] studentsId = customId[3].Split('_', StringSplitOptions.RemoveEmptyEntries);
+                                var result = await GenerateEmbedAndPictureAsync(pickUpStudentList, studentsId, userId);
 
-                                Color[] colors =
+                                if (result.result)
                                 {
-                                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
-                                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
-                                };
-
-                                using var memoryStream = new MemoryStream();
-                                using Image image = Image.Load(Properties.Resources.Event_Main_Stage_Bg.AsSpan());
-
-                                for (int i = 0; i < studentsId.Length; i++)
-                                {
-                                    var item = Students.SingleOrDefault((x) => x.Id.ToString() == studentsId[i]);
-                                    if (item == null)
+                                    await component.UpdateAsync((act) =>
                                     {
-                                        Log.Error($"Id: {studentsId[i]} 無學生資料!!");
-
-                                        await component.UpdateAsync((act) =>
-                                        {
-                                            act.Components = null;
-                                            act.Embed = new EmbedBuilder().WithErrorColor().WithDescription("缺少學生資料，無法繪製圖片，請向 Bot 擁有者確認").Build();
-                                        });
-
-                                        return;
-                                    }
-
-                                    if (maxStudentStarGrade < item.StarGrade)
-                                        maxStudentStarGrade = item.StarGrade;
-
-                                    using (var img = Image.Load(GetStudentAvatarPath(item.Id)))
+                                        act.Attachments = new List<FileAttachment>() { new FileAttachment(result.stream, "image.jpg") };
+                                        act.Components = null;
+                                        act.Embed = result.embed;
+                                    });
+                                }
+                                else
+                                {
+                                    await component.UpdateAsync((act) =>
                                     {
-                                        try
-                                        {
-                                            int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
-                                            int y = i > 4 ? 350 : 50;
-                                            var blackFarmeRect = new RectangularPolygon(x - 11, y - 11, img.Width + 22, img.Height + 22);
-                                            var backgroundColorRect = new RectangularPolygon(x - 10, y - 10, img.Width + 20, img.Height + 20);
-
-                                            image.Mutate((act) => act.Fill(Color.FromRgb(0, 0, 0), blackFarmeRect));
-
-                                            switch (item.StarGrade)
-                                            {
-                                                case 1:
-                                                    image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), backgroundColorRect));
-                                                    break;
-                                                case 2:
-                                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), backgroundColorRect));
-                                                    break;
-                                                case 3 when !pickUpStudentList.Any((x) => x.Id == item.Id):
-                                                    image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), backgroundColorRect));
-                                                    break;
-                                                case 3 when pickUpStudentList.Any((x) => x.Id == item.Id):
-                                                    var brush = new PathGradientBrush(backgroundColorRect.Points.ToArray(), colors, Color.White);
-                                                    image.Mutate((act) => act.Fill(brush));
-                                                    break;
-                                            }
-
-                                            image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Log.Error(ex, $"Draw Student Error: {item.Id} ({i})");
-                                        }
-                                    }
+                                        act.Components = null;
+                                        act.Embed = new EmbedBuilder().WithErrorColor().WithDescription("缺少學生資料或無法繪製圖片，請向 Bot 擁有者確認").Build();
+                                    });
                                 }
 
-                                string description = component.Message.Embeds.First().Description;
-                                try
-                                {
-                                    var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(customId[2]));
-                                    if (valve.HasValue)
-                                    {
-                                        var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve);
-                                        double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
-                                        double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount * 100, 2);
-
-                                        description += "\n" +
-                                            $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
-                                            $"三星數: {userGachaRecord.ThreeStarCount} ({threeStartPercentage}%)\n" +
-                                            $"PickUp數: {userGachaRecord.PickUpCount} ({pickUpPercentage}%)";
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.Error(ex, "DrawRoll - 資料庫存取失敗");
-                                }
-
-                                image.Save(memoryStream, new JpegEncoder());
-
-                                var eb = new EmbedBuilder()
-                                    .WithDescription(description)
-                                    .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
-                                    .WithImageUrl("attachment://image.jpg");
-
-                                switch (maxStudentStarGrade)
-                                {
-                                    case 1:
-                                        eb.WithColor(254, 254, 254);
-                                        break;
-                                    case 2:
-                                        eb.WithColor(255, 247, 122);
-                                        break;
-                                    case 3:
-                                        eb.WithColor(239, 195, 220);
-                                        break;
-                                    default:
-                                        eb.WithColor(254, 254, 254);
-                                        break;
-                                }
-
-                                await component.UpdateAsync((act) =>
-                                {
-                                    act.Attachments = new List<FileAttachment>() { new FileAttachment(memoryStream, "image.jpg") };
-                                    act.Embed = eb.Build();
-                                    act.Components = null;
-                                });
+                                if (result.stream != null)
+                                    await result.stream.DisposeAsync();
                             }
                             catch (Exception ex)
                             {
@@ -247,6 +154,122 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 Log.Error(ex, "ButtonExecuted");
                 await component.SendErrorAsync("錯誤，請向孤之界回報此問題", true);
                 return;
+            }
+        }
+
+        private async Task<(bool result, Embed embed, MemoryStream stream)> GenerateEmbedAndPictureAsync(List<Student> pickUpStudentList, string[] studentsId, ulong userId)
+        {
+            try
+            {
+                int maxStudentStarGrade = 1;
+
+                Color[] colors =
+                {
+                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
+                    Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
+                };
+
+                var memoryStream = new MemoryStream();
+                using Image image = Image.Load(Properties.Resources.Event_Main_Stage_Bg.AsSpan());
+
+                for (int i = 0; i < studentsId.Length; i++)
+                {
+                    var item = Students.SingleOrDefault((x) => x.Id.ToString() == studentsId[i]);
+                    if (item == null)
+                    {
+                        Log.Error($"Id: {studentsId[i]} 無學生資料!!");
+                        return (false, null, null);
+                    }
+
+                    if (maxStudentStarGrade < item.StarGrade)
+                        maxStudentStarGrade = item.StarGrade;
+
+                    using (var img = Image.Load(GetStudentAvatarPath(item.Id)))
+                    {
+                        try
+                        {
+                            int x = 100 + (img.Width + 50) * (i > 4 ? i - 5 : i);
+                            int y = i > 4 ? 350 : 50;
+                            var blackFarmeRect = new RectangularPolygon(x - 11, y - 11, img.Width + 22, img.Height + 22);
+                            var backgroundColorRect = new RectangularPolygon(x - 10, y - 10, img.Width + 20, img.Height + 20);
+
+                            image.Mutate((act) => act.Fill(Color.FromRgb(0, 0, 0), blackFarmeRect));
+
+                            switch (item.StarGrade)
+                            {
+                                case 1:
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), backgroundColorRect));
+                                    break;
+                                case 2:
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), backgroundColorRect));
+                                    break;
+                                case 3 when !pickUpStudentList.Any((x) => x.Id == item.Id):
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), backgroundColorRect));
+                                    break;
+                                case 3 when pickUpStudentList.Any((x) => x.Id == item.Id):
+                                    var brush = new PathGradientBrush(backgroundColorRect.Points.ToArray(), colors, Color.White);
+                                    image.Mutate((act) => act.Fill(brush));
+                                    break;
+                            }
+
+                            image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, $"Draw Student Error: {item.Id} ({i})");
+                        }
+                    }
+                }
+
+                string description = "資料庫存取失敗，無抽卡紀錄資料可供顯示";
+                try
+                {
+                    var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(userId.ToString()));
+                    if (valve.HasValue)
+                    {
+                        var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve);
+                        double threeStartPercentage = userGachaRecord.ThreeStarCount == 0 ? 0 : Math.Round((double)userGachaRecord.ThreeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
+                        double pickUpPercentage = userGachaRecord.PickUpCount == 0 ? 0 : Math.Round((double)userGachaRecord.PickUpCount / userGachaRecord.TotalGachaCount * 100, 2);
+
+                        description = $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
+                            $"三星數: {userGachaRecord.ThreeStarCount} ({threeStartPercentage}%)\n" +
+                            $"PickUp數: {userGachaRecord.PickUpCount} ({pickUpPercentage}%)";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "DrawRoll - 資料庫存取失敗");
+                }
+
+                image.Save(memoryStream, new JpegEncoder());
+
+                var eb = new EmbedBuilder()
+                    .WithDescription(description)
+                    .WithFooter("僅供娛樂，模擬抽卡並不會跟遊戲結果一致，如有疑問建議換帳號重新開局")
+                    .WithImageUrl("attachment://image.jpg");
+
+                switch (maxStudentStarGrade)
+                {
+                    case 1:
+                        eb.WithColor(254, 254, 254);
+                        break;
+                    case 2:
+                        eb.WithColor(255, 247, 122);
+                        break;
+                    case 3:
+                        eb.WithColor(239, 195, 220);
+                        break;
+                    default:
+                        eb.WithColor(254, 254, 254);
+                        break;
+                }
+
+                return (true, eb.Build(), memoryStream);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Draw Error");
+                return (false, null, null);
             }
         }
 
