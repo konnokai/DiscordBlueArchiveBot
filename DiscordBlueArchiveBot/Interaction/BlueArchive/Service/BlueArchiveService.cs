@@ -62,6 +62,58 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         public string GetStudentAvatarPath(int id)
             => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.jpg");
 
+        public void AddReminderItem(ulong userId, string[] studentsIdArray, SocketInteraction userMessage, RegionType regionType)
+        {
+            reminders.AddOrUpdate(userId,
+                new ReminderItem(userId, studentsIdArray, userMessage, regionType, new Timer(ReminderTimerAction, userId, TimeSpan.FromSeconds(10), TimeSpan.Zero)),
+                (userId, reminderItem) =>
+                {
+                    reminderItem.Timer.Dispose();
+                    return new ReminderItem(userId, studentsIdArray, userMessage, regionType, new Timer(ReminderTimerAction, userId, TimeSpan.FromSeconds(10), TimeSpan.Zero));
+                }
+            );
+        }
+
+        private async void ReminderTimerAction(object rObj)
+        {
+            var userId = (ulong)rObj;
+
+            if (!reminders.TryRemove(userId, out var reminder))
+            {
+                Log.Info($"{userId} 已繪製圖片，略過");
+                return;
+            }
+
+            try
+            {
+                var result = await GenerateEmbedAndPictureAsync(reminder.RegionType, reminder.StudentIdArray, userId);
+                if (result.result)
+                {
+                    await reminder.Message.ModifyOriginalResponseAsync((act) =>
+                    {
+                        act.Attachments = new List<FileAttachment>() { new FileAttachment(result.stream, "image.jpg") };
+                        act.Components = null;
+                        act.Embed = result.embed;
+                    });
+                }
+                else
+                {
+                    await reminder.Message.ModifyOriginalResponseAsync((act) =>
+                    {
+                        act.Components = null;
+                        act.Embed = new EmbedBuilder().WithErrorColor().WithDescription("缺少學生資料或無法繪製圖片，請向 Bot 擁有者確認").Build();
+                    });
+                }
+
+                if (result.stream != null)
+                    await result.stream.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "ReminderTimerAction");
+            }
+        }
+
         private async Task _client_ButtonExecuted(SocketMessageComponent component)
         {
             if (component.HasResponded)
@@ -83,11 +135,12 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                             try
                             {
-                                var pickUpStudentList = customId[1] == "0" ? JPPickUpDatas : GlobalPickUpDatas;
                                 var userId = ulong.Parse(customId[2]);
                                 string[] studentsId = customId[3].Split('_', StringSplitOptions.RemoveEmptyEntries);
-                                var result = await GenerateEmbedAndPictureAsync(pickUpStudentList, studentsId, userId);
 
+                                reminders.TryRemove(userId, out var reminder);
+
+                                var result = await GenerateEmbedAndPictureAsync(customId[0] == "0" ? RegionType.Japan : RegionType.Global, studentsId, userId);
                                 if (result.result)
                                 {
                                     await component.UpdateAsync((act) =>
@@ -157,10 +210,11 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             }
         }
 
-        private async Task<(bool result, Embed embed, MemoryStream stream)> GenerateEmbedAndPictureAsync(List<Student> pickUpStudentList, string[] studentsId, ulong userId)
+        private async Task<(bool result, Embed embed, MemoryStream stream)> GenerateEmbedAndPictureAsync(RegionType regionType, string[] studentsId, ulong userId)
         {
             try
             {
+                var pickUpStudentList = regionType == RegionType.Japan ? JPPickUpDatas : GlobalPickUpDatas;
                 int maxStudentStarGrade = 1;
 
                 Color[] colors =
@@ -607,6 +661,24 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 throw new NullReferenceException(nameof(type));
 
             return type;
+        }
+    }
+
+    public class ReminderItem
+    {
+        public ulong UserId { get; set; }
+        public string[] StudentIdArray { get; set; }
+        public SocketInteraction Message { get; set; }
+        public RegionType RegionType { get; set; }
+        public Timer Timer { get; set; }
+
+        public ReminderItem(ulong userId, string[] studentIdArray, SocketInteraction message, RegionType regionType, Timer timer)
+        {
+            UserId = userId;
+            StudentIdArray = studentIdArray;
+            Message = message;
+            RegionType = regionType;
+            Timer = timer;
         }
     }
 

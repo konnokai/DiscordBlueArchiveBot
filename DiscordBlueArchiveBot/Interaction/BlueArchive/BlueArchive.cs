@@ -390,6 +390,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 .WithButton("簽名開牌!", "roll:" + (regionType == RegionType.Japan ? "0" : "1") + $":{Context.User.Id}:{string.Join('_', rollStudentList.Select((x) => x.Id))}", ButtonStyle.Primary);
 
             await RespondAsync(embed: eb.Build(), components: cb.Build(), ephemeral: isNeedEphemeral);
+
+            if (!isNeedEphemeral)
+                _service.AddReminderItem(Context.User.Id, rollStudentList.Select((x) => x.Id.ToString()).ToArray(), Context.Interaction, regionType);
         }
 
         private Student GetRandomStudentFromStarGrade(int starGrade, RegionType regionType)
