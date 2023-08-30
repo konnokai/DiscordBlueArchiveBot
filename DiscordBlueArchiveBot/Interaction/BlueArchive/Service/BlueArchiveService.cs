@@ -62,14 +62,14 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         public string GetStudentAvatarPath(int id)
             => Program.GetDataFilePath($"Avatar{Program.GetPlatformSlash()}{id}.jpg");
 
-        public void AddReminderItem(ulong userId, string[] studentsIdArray, SocketInteraction userMessage, RegionType regionType)
+        public void AddReminderItem(ulong userId, string[] studentsIdArray, SocketInteraction interaction, RegionType regionType)
         {
             reminders.AddOrUpdate(userId,
-                new ReminderItem(userId, studentsIdArray, userMessage, regionType, new Timer(ReminderTimerAction, userId, TimeSpan.FromSeconds(10), TimeSpan.Zero)),
+                new ReminderItem(userId, studentsIdArray, interaction, regionType, new Timer(ReminderTimerAction, userId, TimeSpan.FromSeconds(10), TimeSpan.Zero)),
                 (userId, reminderItem) =>
                 {
                     reminderItem.Timer.Dispose();
-                    return new ReminderItem(userId, studentsIdArray, userMessage, regionType, new Timer(ReminderTimerAction, userId, TimeSpan.FromSeconds(10), TimeSpan.Zero));
+                    return new ReminderItem(userId, studentsIdArray, interaction, regionType, new Timer(ReminderTimerAction, userId, TimeSpan.FromSeconds(10), TimeSpan.Zero));
                 }
             );
         }
@@ -89,7 +89,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 var result = await GenerateEmbedAndPictureAsync(reminder.RegionType, reminder.StudentIdArray, userId);
                 if (result.result)
                 {
-                    await reminder.Message.ModifyOriginalResponseAsync((act) =>
+                    await reminder.Interaction.ModifyOriginalResponseAsync((act) =>
                     {
                         act.Attachments = new List<FileAttachment>() { new FileAttachment(result.stream, "image.jpg") };
                         act.Components = null;
@@ -98,7 +98,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 }
                 else
                 {
-                    await reminder.Message.ModifyOriginalResponseAsync((act) =>
+                    await reminder.Interaction.ModifyOriginalResponseAsync((act) =>
                     {
                         act.Components = null;
                         act.Embed = new EmbedBuilder().WithErrorColor().WithDescription("缺少學生資料或無法繪製圖片，請向 Bot 擁有者確認").Build();
@@ -668,15 +668,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
     {
         public ulong UserId { get; set; }
         public string[] StudentIdArray { get; set; }
-        public SocketInteraction Message { get; set; }
+        public SocketInteraction Interaction { get; set; }
         public RegionType RegionType { get; set; }
         public Timer Timer { get; set; }
 
-        public ReminderItem(ulong userId, string[] studentIdArray, SocketInteraction message, RegionType regionType, Timer timer)
+        public ReminderItem(ulong userId, string[] studentIdArray, SocketInteraction interaction, RegionType regionType, Timer timer)
         {
             UserId = userId;
             StudentIdArray = studentIdArray;
-            Message = message;
+            Interaction = interaction;
             RegionType = regionType;
             Timer = timer;
         }
