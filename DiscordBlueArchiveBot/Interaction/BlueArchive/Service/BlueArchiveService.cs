@@ -372,7 +372,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 var jpCurrentRegionsData = _common.Regions.FirstOrDefault((x) => x.Name == "jp");
                 if (jpCurrentRegionsData != null)
                 {
-                    // 僅使用現在正開放池的當Pu資料
+                    // 僅使用現在開放的池當Pu資料
                     foreach (var item in jpCurrentRegionsData.CurrentGacha.Where((x) => ConvertTimestampToDatetime(x.Start) <= DateTime.Now && ConvertTimestampToDatetime(x.End) > DateTime.Now))
                     {
                         // 要限制只出三星的Pu不然機率會出問題
