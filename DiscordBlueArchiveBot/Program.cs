@@ -13,23 +13,24 @@ namespace DiscordBlueArchiveBot
 {
     internal class Program
     {
+        public enum BotPlayingStatus { Guild, Member, RollInfo, Info }
+
+        public static BotPlayingStatus Status { get; set; } = BotPlayingStatus.Guild;
         public static string VERSION => GetLinkerTime(Assembly.GetEntryAssembly());
         public static ConnectionMultiplexer Redis { get; set; }
         public static ISubscriber RedisSub { get; set; }
         public static IDatabase RedisDb { get; set; }
-
         public static IUser ApplicatonOwner { get; private set; } = null;
-        public static DiscordSocketClient _client;
-        public static BotPlayingStatus Status = BotPlayingStatus.Guild;
-        public static Stopwatch stopWatch = new Stopwatch();
-        public static bool isConnect = false, isDisconnect = false, isNeedRegisterAppCommand = false;
-        static Timer timerUpdateStatus;
-        static readonly BotConfig botConfig = new();
-        public enum BotPlayingStatus { Guild, Member, RollInfo, Info }
+        public static Stopwatch StopWatch { get; private set; } = new Stopwatch();
+
+        private static bool isConnect = false, isDisconnect = false, isNeedRegisterAppCommand = false;
+        private static Timer timerUpdateStatus;
+        private static readonly DiscordSocketClient _client;
+        private static readonly BotConfig botConfig = new();
 
         static async Task Main(string[] args)
         {
-            stopWatch.Start();
+            StopWatch.Start();
 
             Log.Info(VERSION + " 初始化中");
             Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -90,7 +91,7 @@ namespace DiscordBlueArchiveBot
 
             _client.Ready += async () =>
             {
-                stopWatch.Start();
+                StopWatch.Start();
                 timerUpdateStatus!.Change(0, 15 * 60 * 1000);
 
                 ApplicatonOwner = (await _client.GetApplicationInfoAsync()).Owner;
