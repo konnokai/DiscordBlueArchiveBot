@@ -24,8 +24,8 @@ namespace DiscordBlueArchiveBot
         public static Stopwatch StopWatch { get; private set; } = new Stopwatch();
 
         private static bool isConnect = false, isDisconnect = false, isNeedRegisterAppCommand = false;
+        private static DiscordSocketClient _client;
         private static Timer timerUpdateStatus;
-        private static readonly DiscordSocketClient _client;
         private static readonly BotConfig botConfig = new();
 
         static async Task Main(string[] args)
