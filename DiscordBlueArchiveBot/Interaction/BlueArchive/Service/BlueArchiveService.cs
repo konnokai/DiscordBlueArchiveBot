@@ -626,7 +626,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         private DateTime ConvertTimestampToDatetime(int? timestamp)
         => new DateTime(1970, 1, 1, 0, 0, 0).AddHours(8).AddSeconds(timestamp.Value);
 
-        private async Task<T> GetDataFromServerAsync<T>(string localization = "") where T : IJson, new()
+        private async Task<T> GetDataFromServerAsync<T>(string localization = "") where T : BaseJson, new()
         {
             T type = new(); string json;
 

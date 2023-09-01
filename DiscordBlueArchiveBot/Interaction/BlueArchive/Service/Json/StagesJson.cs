@@ -2,18 +2,8 @@
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 {
-    public class StagesJson : IJson
+    public class StagesJson : BaseJson
     {
-        public string Name { get; private set; }
-        public bool Localization { get; private set; }
-        public Action<string> DeserializeAction { get; private set; } = null;
-
-        public StagesJson()
-        {
-            Name = GetType().Name.Replace("Json", "").ToLower();
-            Localization = false;
-        }
-
         [JsonProperty("Campaign")]
         public List<Campaign> Campaigns { get; set; }
 

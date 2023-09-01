@@ -2,15 +2,10 @@
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 {
-    public class RaidsJson : IJson
+    public class RaidsJson : BaseJson
     {
-        public string Name { get; private set; }
-        public bool Localization { get; private set; }
-        public Action<string> DeserializeAction { get; private set; } = null;
-
         public RaidsJson()
         {
-            Name = GetType().Name.Replace("Json", "").ToLower();
             Localization = true;
         }
 

@@ -2,18 +2,8 @@
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 {
-    public class CommonJson : IJson
+    public class CommonJson : BaseJson
     {
-        public string Name { get; private set; }
-        public bool Localization { get; private set; }
-        public Action<string> DeserializeAction { get; private set; } = null;
-
-        public CommonJson()
-        {
-            Name = GetType().Name.Replace("Json", "").ToLower();
-            Localization = false;
-        }
-
         [JsonProperty("GachaGroup")]
         public List<GachaGroup> GachaGroups { get; set; }
 
