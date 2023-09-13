@@ -369,7 +369,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     }
                 }
 
-                var jpCurrentRegionsData = _common.Regions.FirstOrDefault((x) => x.Name == "jp");
+                var jpCurrentRegionsData = _common.Regions.FirstOrDefault((x) => x.Name == "Jp");
                 if (jpCurrentRegionsData != null)
                 {
                     // 僅使用現在開放的池當Pu資料
@@ -428,7 +428,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     }
                 }
 
-                var globalCurrentRegionsData = _common.Regions.FirstOrDefault((x) => x.Name == "global");
+                var globalCurrentRegionsData = _common.Regions.FirstOrDefault((x) => x.Name == "Global");
                 if (globalCurrentRegionsData != null)
                 {
                     foreach (var item in globalCurrentRegionsData.CurrentGacha.Where((x) => ConvertTimestampToDatetime(x.Start) <= DateTime.Now && ConvertTimestampToDatetime(x.End) > DateTime.Now))
