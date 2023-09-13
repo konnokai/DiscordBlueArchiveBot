@@ -10,6 +10,18 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         [JsonProperty("regions")]
         public List<Region> Regions { get; set; }
 
+        [JsonProperty("changelog")]
+        public List<Changelog> Changelogs { get; set; }
+
+        public class Changelog
+        {
+            [JsonProperty("date")]
+            public string Date { get; set; }
+
+            [JsonProperty("contents")]
+            public List<string> Contents { get; set; }
+        }
+
         public class CurrentEvent
         {
             [JsonProperty("event")]
@@ -36,17 +48,20 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 
         public class CurrentRaid
         {
+            [JsonProperty("type")]
+            public string Type { get; set; }
+
             [JsonProperty("raid")]
             public int? Raid { get; set; }
-
-            [JsonProperty("terrain")]
-            public string Terrain { get; set; }
 
             [JsonProperty("start")]
             public int? Start { get; set; }
 
             [JsonProperty("end")]
             public int? End { get; set; }
+
+            [JsonProperty("terrain")]
+            public string Terrain { get; set; }
         }
 
         public class GachaGroup

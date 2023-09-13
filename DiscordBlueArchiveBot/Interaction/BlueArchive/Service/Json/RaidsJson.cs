@@ -13,7 +13,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
         public List<Raid> Raids { get; set; }
 
         [JsonProperty("RaidSeasons")]
-        public List<RaidSeason> RaidSeasons { get; set; }
+        public List<object> RaidSeasons { get; set; }
 
         [JsonProperty("TimeAttack")]
         public List<TimeAttack> TimeAttacks { get; set; }
@@ -79,6 +79,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 
             [JsonProperty("StackSame")]
             public int? StackSame { get; set; }
+
+            [JsonProperty("StackingIcon")]
+            public List<string> StackingIcon { get; set; }
         }
 
         public class EffectCombineLabel
@@ -94,6 +97,15 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 
             [JsonProperty("DisableFirst")]
             public bool? DisableFirst { get; set; }
+        }
+
+        public class EffectStackLabel
+        {
+            [JsonProperty("Label")]
+            public List<string> Label { get; set; }
+
+            [JsonProperty("Icon")]
+            public List<string> Icon { get; set; }
         }
 
         public class Formation
@@ -125,6 +137,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             [JsonProperty("PathName")]
             public string PathName { get; set; }
 
+            [JsonProperty("GroupName")]
+            public string GroupName { get; set; }
+
             [JsonProperty("Faction")]
             public string Faction { get; set; }
 
@@ -146,8 +161,11 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             [JsonProperty("RaidSkill")]
             public List<RaidSkill> RaidSkill { get; set; }
 
-            [JsonProperty("ExcludeNormalAttack")]
-            public List<int?> ExcludeNormalAttack { get; set; }
+            [JsonProperty("HasNormalAttack")]
+            public List<int?> HasNormalAttack { get; set; }
+
+            [JsonProperty("BattleDuration")]
+            public List<int?> BattleDuration { get; set; }
 
             [JsonProperty("Name")]
             public string Name { get; set; }
@@ -160,12 +178,6 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 
             [JsonProperty("IconBG")]
             public string IconBG { get; set; }
-        }
-
-        public class RaidSeason
-        {
-            [JsonProperty("Seasons")]
-            public List<Seasons> Seasons { get; set; }
         }
 
         public class RaidSkill
@@ -208,6 +220,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 
             [JsonProperty("EffectCombineLabel")]
             public EffectCombineLabel EffectCombineLabel { get; set; }
+
+            [JsonProperty("EffectStackLabel")]
+            public EffectStackLabel EffectStackLabel { get; set; }
         }
 
         public class Reward
@@ -225,31 +240,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             public List<List<double?>> Items { get; set; }
 
             [JsonProperty("Groups")]
-            public List<object> Groups { get; set; }
-        }
-
-        public class Seasons
-        {
-            [JsonProperty("Season")]
-            public int? Season { get; set; }
-
-            [JsonProperty("RaidId")]
-            public int? RaidId { get; set; }
-
-            [JsonProperty("Terrain")]
-            public string Terrain { get; set; }
-
-            [JsonProperty("Start")]
-            public int? Start { get; set; }
-
-            [JsonProperty("End")]
-            public int? End { get; set; }
-
-            [JsonProperty("RewardSet")]
-            public int? RewardSet { get; set; }
-
-            [JsonProperty("RewardSetMax")]
-            public int? RewardSetMax { get; set; }
+            public List<List<object>> Groups { get; set; }
         }
 
         public class TimeAttack
@@ -286,6 +277,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 
             [JsonProperty("Rules")]
             public List<List<object>> Rules { get; set; }
+
+            [JsonProperty("BattleDuration")]
+            public List<int?> BattleDuration { get; set; }
         }
 
         public class TimeAttackRule
@@ -344,6 +338,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             [JsonProperty("RaidSkill")]
             public List<RaidSkill> RaidSkill { get; set; }
 
+            [JsonProperty("HasNormalAttack")]
+            public List<object> HasNormalAttack { get; set; }
+
             [JsonProperty("Name")]
             public string Name { get; set; }
 
@@ -352,6 +349,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 
             [JsonProperty("EntryCost")]
             public List<List<int?>> EntryCost { get; set; }
+
+            [JsonProperty("BattleDuration")]
+            public List<int?> BattleDuration { get; set; }
 
             [JsonProperty("RewardsGlobal")]
             public List<RewardsGlobal> RewardsGlobal { get; set; }
@@ -362,7 +362,5 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
             [JsonProperty("UseRaidSkillList")]
             public int? UseRaidSkillList { get; set; }
         }
-
-
     }
 }

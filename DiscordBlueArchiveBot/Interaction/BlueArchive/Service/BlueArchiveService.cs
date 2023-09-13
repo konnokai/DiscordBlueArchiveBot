@@ -345,7 +345,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 _jpRaids = await GetDataFromServerAsync<RaidsJson>("jp");
                 _jpLocalizations = await GetDataFromServerAsync<LocalizationJson>("jp");
 
-                Log.Info($"最新的學生名稱: \"{Students.Last().StudentName}\" | 總學生數量: {Students.Count}");
+                Log.Info($"最新的學生名稱: \"{Students.Last().Name}\" | 總學生數量: {Students.Count}");
                 if (!Directory.Exists(Program.GetDataFilePath($"Avatar")))
                     Directory.CreateDirectory(Program.GetDataFilePath($"Avatar"));
 
@@ -356,7 +356,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         try
                         {
                             Log.Info($"下載 {item.Id} 的頭像");
-                            var stream = await _httpClient.GetStreamAsync($"https://schale.gg/images/student/collection/{item.CollectionTexture}.webp");
+                            var stream = await _httpClient.GetStreamAsync($"https://schale.gg/images/student/collection/{item.Id}.webp");
                             using (var img = await SixLabors.ImageSharp.Image.LoadAsync(stream))
                             {
                                 await img.SaveAsJpegAsync(GetStudentAvatarPath(item.Id));
@@ -488,6 +488,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             catch (Exception ex)
             {
                 Log.Error(ex, "RefreshDataAsync");
+                if (Program.ApplicatonOwner != null)
+                    await Program.ApplicatonOwner.SendMessageAsync($"RefreshDataAsync: {ex.Message}");
             }
             finally
             {
@@ -514,7 +516,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                 {
                                     await _client.SendMessageToDMChannelAsync(item.UserId,
                                         $"今天是 `{string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}` 的生日!",
-                                        $"https://schale.gg/images/student/collection/{birthdayStudent.First().CollectionTexture}.webp");
+                                        $"https://schale.gg/images/student/collection/{birthdayStudent.First().Id}.webp");
                                 }
                             }
                         }
@@ -652,13 +654,21 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 await Program.RedisDb.StringSetAsync(redisKey, json, TimeSpan.FromMinutes(59));
             }
 
-            if (type.DeserializeAction != null)
-                type.DeserializeAction(json);
-            else
-                type = JsonConvert.DeserializeObject<T>(json);
+            try
+            {
+                if (type.DeserializeAction != null)
+                    type.DeserializeAction(json);
+                else
+                    type = JsonConvert.DeserializeObject<T>(json);
 
-            if (type == null)
-                throw new NullReferenceException(nameof(type));
+                if (type == null)
+                    throw new NullReferenceException(nameof(type));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{type.Name} ({localization}) Deserialize Error");
+                throw new JsonException(ex.Message);
+            }
 
             return type;
         }

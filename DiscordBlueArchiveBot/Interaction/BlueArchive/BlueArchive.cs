@@ -497,7 +497,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 
                         // 名稱文字繪製
                         textOptions.Origin = new PointF(x + (float)(img.Width / 2), y + img.Height - 5);
-                        image.Mutate((act) => act.DrawText(textOptions, item.Key.StudentName.Replace("（", "(").Replace("）", ")"), Color.White));
+                        image.Mutate((act) => act.DrawText(textOptions, item.Key.Name.Replace("（", "(").Replace("）", ")"), Color.White));
 
                         // 持有量背景繪製
                         image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(40, 40, 40)), new RectangleF(x, y, 80, 40)));
