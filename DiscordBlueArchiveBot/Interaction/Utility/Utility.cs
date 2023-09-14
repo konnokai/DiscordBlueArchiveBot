@@ -26,7 +26,7 @@ namespace DiscordBlueArchiveBot.Interaction.Utility
         public async Task StatusAsync()
         {
             EmbedBuilder embedBuilder = new EmbedBuilder().WithOkColor();
-            embedBuilder.WithTitle("檔案小幫手");
+            embedBuilder.WithTitle($"{Context.Client.CurrentUser.Username}");
 #if DEBUG
             embedBuilder.Title += " (測試版)";
 #endif
