@@ -112,12 +112,12 @@ namespace DiscordBlueArchiveBot.Interaction.Help
             if (string.IsNullOrWhiteSpace(module))
             {
                 EmbedBuilder embed = new EmbedBuilder().WithOkColor().WithFooter("輸入 `/help get-all-modules` 取得所有的模組");
-                embed.Title = "直播小幫手 建置版本" + Program.VERSION;
+                embed.Title = $"{Context.Client.CurrentUser.Username} 建置版本 {Program.VERSION}";
 #if DEBUG
                 embed.Title += " (測試版)";
 #endif
                 embed.WithDescription(File.ReadAllText(Program.GetDataFilePath("HelpDescription.txt")).Replace("\\n", "\n") +
-                    $"\n\n您可以透過 {Format.Url("Patreon", DiscordBlueArchiveBot.Utility.PatreonUrl)} 或 {Format.Url("Paypal", DiscordBlueArchiveBot.Utility.PaypalUrl)} 來贊助直播小幫手");
+                    $"\n\n您可以透過 {Format.Url("Patreon", DiscordBlueArchiveBot.Utility.PatreonUrl)} 或 {Format.Url("Paypal", DiscordBlueArchiveBot.Utility.PaypalUrl)} 來贊助 {Context.Client.CurrentUser.Username}");
                 await RespondAsync(embed: embed.Build());
                 return;
             }
