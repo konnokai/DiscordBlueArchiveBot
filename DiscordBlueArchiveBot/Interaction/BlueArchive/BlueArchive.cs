@@ -439,109 +439,111 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
 
             needRenderStudentDic = new(needRenderStudentDic.OrderByDescending((x) => x.Key.StarGrade).ThenByDescending(x => x.Key.IsLimited).ThenByDescending((x) => x.Value));
 
-            using var memoryStream = new MemoryStream();
-            using (var image = new Image<Rgba32>(1920, 1054, new Color(new Rgb24(33, 37, 41))))
+            await Context.SendPaginatedConfirmAsync(0, async (page) =>
             {
-                // https://docs.sixlabors.com/articles/imagesharp.drawing/gettingstarted.html#expanded-example-1
-                TextOptions textOptions = new(_service.JPGameFont)
+                using var memoryStream = new MemoryStream();
+                using (var image = new Image<Rgba32>(1920, 1054, new Color(new Rgb24(33, 37, 41))))
                 {
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
-
-                // https://github.com/SixLabors/ImageSharp.Drawing/issues/38#issuecomment-877788789
-                DrawingOptions drawingOptions = new()
-                {
-                    GraphicsOptions = new GraphicsOptions { BlendPercentage = .8F }
-                };
-
-                int index = 0;
-                foreach (var item in needRenderStudentDic.Take(32))
-                {
-                    using (var img = Image.Load(_service.GetStudentAvatarPath(item.Key.Id)))
+                    // https://docs.sixlabors.com/articles/imagesharp.drawing/gettingstarted.html#expanded-example-1
+                    TextOptions textOptions = new(_service.JPGameFont)
                     {
-                        // 圖片長寬 200 * 226，一列畫8個人應該差不多
-                        int x = 40 + (img.Width + 35) * (index % 8);
-                        int y = 50 + (index <= 7 ? 0 : 250 * (index / 8));
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                    };
 
-                        // 繪製星級邊框
-                        Color[] colors =
-                        {
-                            Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
-                            Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
-                        };
+                    // https://github.com/SixLabors/ImageSharp.Drawing/issues/38#issuecomment-877788789
+                    DrawingOptions drawingOptions = new()
+                    {
+                        GraphicsOptions = new GraphicsOptions { BlendPercentage = .8F }
+                    };
 
-                        var backgroundColorRect = new RectangularPolygon(x - 5, y - 5, img.Width + 10, img.Height + 10);
-                        switch (item.Key.StarGrade)
+                    int index = 0;
+                    foreach (var item in needRenderStudentDic.Skip(page * 32).Take(32))
+                    {
+                        using (var img = Image.Load(_service.GetStudentAvatarPath(item.Key.Id)))
                         {
-                            case 1:
-                                image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), backgroundColorRect));
-                                break;
-                            case 2:
-                                image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), backgroundColorRect));
-                                break;
-                            case 3 when item.Key.IsLimited == 0:
-                                image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), backgroundColorRect));
-                                break;
-                            case 3 when item.Key.IsLimited == 1:
-                                var brush = new PathGradientBrush(backgroundColorRect.Points.ToArray(), colors, Color.White);
-                                image.Mutate((act) => act.Fill(brush));
-                                break;
+                            // 圖片長寬 200 * 226，一列畫8個人應該差不多
+                            int x = 40 + (img.Width + 35) * (index % 8);
+                            int y = 50 + (index <= 7 ? 0 : 250 * (index / 8));
+
+                            // 繪製星級邊框
+                            Color[] colors =
+                            {
+                                Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple,
+                                Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Purple
+                            };
+
+                            var backgroundColorRect = new RectangularPolygon(x - 5, y - 5, img.Width + 10, img.Height + 10);
+                            switch (item.Key.StarGrade)
+                            {
+                                case 1:
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(254, 254, 254), backgroundColorRect));
+                                    break;
+                                case 2:
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(255, 247, 122), backgroundColorRect));
+                                    break;
+                                case 3 when item.Key.IsLimited == 0:
+                                    image.Mutate((act) => act.Fill(Color.FromRgb(239, 195, 220), backgroundColorRect));
+                                    break;
+                                case 3 when item.Key.IsLimited == 1:
+                                    var brush = new PathGradientBrush(backgroundColorRect.Points.ToArray(), colors, Color.White);
+                                    image.Mutate((act) => act.Fill(brush));
+                                    break;
+                            }
+
+                            // 角色圖繪製
+                            image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+
+                            // 名稱背景繪製
+                            image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(40, 40, 40)), new RectangleF(x, y + img.Height - 40, img.Width, 40)));
+
+                            // 名稱文字繪製
+                            textOptions.Origin = new PointF(x + (float)(img.Width / 2), y + img.Height - 5);
+                            image.Mutate((act) => act.DrawText(textOptions, item.Key.Name.Replace("（", "(").Replace("）", ")"), Color.White));
+
+                            // 持有量背景繪製
+                            image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(40, 40, 40)), new RectangleF(x, y, 80, 40)));
+
+                            // 持有量文字繪製
+                            textOptions.Origin = new PointF(x + 40, y + 35);
+                            image.Mutate((act) => act.DrawText(textOptions, item.Value.ToString(), Color.White));
+
+                            index++;
                         }
+                    }
 
-                        // 角色圖繪製
-                        image.Mutate((act) => act.DrawImage(img, new Point(x, y), 1f));
+                    image.Save(memoryStream, new JpegEncoder());
+                }
 
-                        // 名稱背景繪製
-                        image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(40, 40, 40)), new RectangleF(x, y + img.Height - 40, img.Width, 40)));
+                string description = "";
+                try
+                {
+                    var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(user.Id.ToString()));
+                    if (valve.HasValue)
+                    {
+                        var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve!)!;
+                        int threeStarCount = needRenderStudentDic.Sum((x) => x.Key.StarGrade == 3 ? x.Value : 0);
+                        int limitCount = needRenderStudentDic.Sum((x) => x.Key.IsLimited == 1 ? x.Value : 0);
 
-                        // 名稱文字繪製
-                        textOptions.Origin = new PointF(x + (float)(img.Width / 2), y + img.Height - 5);
-                        image.Mutate((act) => act.DrawText(textOptions, item.Key.Name.Replace("（", "(").Replace("）", ")"), Color.White));
+                        double threeStartPercentage = threeStarCount == 0 ? 0 : Math.Round((double)threeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
+                        double limitCountPercentage = limitCount == 0 ? 0 : Math.Round((double)limitCount / userGachaRecord.TotalGachaCount * 100, 2);
 
-                        // 持有量背景繪製
-                        image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(40, 40, 40)), new RectangleF(x, y, 80, 40)));
-
-                        // 持有量文字繪製
-                        textOptions.Origin = new PointF(x + 40, y + 35);
-                        image.Mutate((act) => act.DrawText(textOptions, item.Value.ToString(), Color.White));
-
-                        index++;
+                        description += $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
+                            $"總學生數: {needRenderStudentDic.Count()} (不含重複)\n" +
+                            $"三星數: {threeStarCount} ({threeStartPercentage}%)\n" +
+                            $"限定數: {limitCount} ({limitCountPercentage}%)";
                     }
                 }
-
-                image.Save(memoryStream, new JpegEncoder());
-            }
-
-            string description = "";
-            try
-            {
-                var valve = await Program.RedisDb.HashGetAsync(new RedisKey("bluearchive:gachaRecord"), new RedisValue(user.Id.ToString()));
-                if (valve.HasValue)
+                catch (Exception ex)
                 {
-                    var userGachaRecord = JsonConvert.DeserializeObject<UserGachaRecord>(valve!)!;
-                    int threeStarCount = needRenderStudentDic.Sum((x) => x.Key.StarGrade == 3 ? x.Value : 0);
-                    int limitCount = needRenderStudentDic.Sum((x) => x.Key.IsLimited == 1 ? x.Value : 0);
-
-                    double threeStartPercentage = threeStarCount == 0 ? 0 : Math.Round((double)threeStarCount / userGachaRecord.TotalGachaCount * 100, 2);
-                    double limitCountPercentage = limitCount == 0 ? 0 : Math.Round((double)limitCount / userGachaRecord.TotalGachaCount * 100, 2);
-
-                    description += $"總抽數: {userGachaRecord.TotalGachaCount}\n" +
-                        $"總學生數: {needRenderStudentDic.Count()} (不含重複)\n" +
-                        $"三星數: {threeStarCount} ({threeStartPercentage}%)\n" +
-                        $"限定數: {limitCount} ({limitCountPercentage}%)";
+                    Log.Error(ex, "ShowStudent - Redis 存取失敗");
                 }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "ShowStudent - Redis 存取失敗");
-            }
 
-            var eb = new EmbedBuilder()
-                .WithDescription(description)
-                .WithImageUrl("attachment://image.jpg");
+                var eb = new EmbedBuilder()
+                    .WithDescription(description);
 
-            await FollowupWithFileAsync(memoryStream, "image.jpg", embed: eb.Build());
+                return (eb, memoryStream.ToArray());
+            }, needRenderStudentDic.Count(), 32, true, false, true);
         }
     }
 }

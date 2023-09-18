@@ -1,6 +1,7 @@
 ﻿using DiscordBlueArchiveBot.Interaction;
 using Microsoft.Extensions.DependencyInjection;
 using System.Data;
+using System.IO;
 using System.Reflection;
 
 namespace DiscordBlueArchiveBot.Interaction
@@ -129,22 +130,34 @@ namespace DiscordBlueArchiveBot.Interaction
            => di.FollowupAsync(embed: new EmbedBuilder().WithOkColor().WithDescription(msg).Build(),
                options: new RequestOptions { RetryMode = RetryMode.AlwaysRetry }, ephemeral: ephemeral);
 
-
-        public static Task SendPaginatedConfirmAsync(this IInteractionContext ctx, int currentPage, Func<int, EmbedBuilder> pageFunc, int totalElements, int itemsPerPage, bool addPaginatedFooter = true, bool ephemeral = false, bool isFollowup = false)
+        public static Task SendPaginatedConfirmAsync(this IInteractionContext ctx, int currentPage, Func<int, (EmbedBuilder embedBuilder, byte[]? imageBytes)> pageFunc, int totalElements, int itemsPerPage, bool addPaginatedFooter = true, bool ephemeral = false, bool isFollowup = false)
             => ctx.SendPaginatedConfirmAsync(currentPage, (x) => Task.FromResult(pageFunc(x)), totalElements, itemsPerPage, addPaginatedFooter, ephemeral, isFollowup);
 
         public static async Task SendPaginatedConfirmAsync(this IInteractionContext ctx, int currentPage,
-    Func<int, Task<EmbedBuilder>> pageFunc, int totalElements, int itemsPerPage, bool addPaginatedFooter = true, bool ephemeral = false, bool isFollowup = false)
+            Func<int, Task<(EmbedBuilder embedBuilder, byte[]? imageBytes)>> pageFunc, int totalElements, int itemsPerPage, bool addPaginatedFooter = true, bool ephemeral = false, bool isFollowup = false)
         {
-            var embed = await pageFunc(currentPage).ConfigureAwait(false);
-
             var lastPage = (totalElements - 1) / itemsPerPage;
 
-            if (addPaginatedFooter)
-                embed.AddPaginatedFooter(currentPage, lastPage);
+            var result = await pageFunc(Math.Min(currentPage, lastPage)).ConfigureAwait(false);
 
-            if (isFollowup) await ctx.Interaction.FollowupAsync(ephemeral ? "私人回應，無法換頁\n如需換頁請直接使用指令換頁" : null, embed: embed.Build(), ephemeral: ephemeral).ConfigureAwait(false);
-            else await ctx.Interaction.RespondAsync(ephemeral ? "私人回應，無法換頁\n如需換頁請直接使用指令換頁" : null, embed: embed.Build(), ephemeral: ephemeral).ConfigureAwait(false);
+            if (addPaginatedFooter)
+                result.embedBuilder.AddPaginatedFooter(currentPage, lastPage);
+
+            string? message = ephemeral ? "私人回應，無法換頁\n如需換頁請直接使用指令換頁" : null;
+            if (result.imageBytes != null)
+            {
+                result.embedBuilder.WithImageUrl("attachment://image.jpg");
+
+                MemoryStream? memoryStream = new MemoryStream(result.imageBytes);
+
+                if (isFollowup) await ctx.Interaction.FollowupWithFileAsync(memoryStream, "image.jpg", message, embed: result.embedBuilder.Build(), ephemeral: ephemeral).ConfigureAwait(false);
+                else await ctx.Interaction.RespondWithFileAsync(memoryStream, "image.jpg", message, embed: result.embedBuilder.Build(), ephemeral: ephemeral).ConfigureAwait(false);
+            }
+            else
+            {
+                if (isFollowup) await ctx.Interaction.FollowupAsync(message, embed: result.embedBuilder.Build(), ephemeral: ephemeral).ConfigureAwait(false);
+                else await ctx.Interaction.RespondAsync(message, embed: result.embedBuilder.Build(), ephemeral: ephemeral).ConfigureAwait(false);
+            }
 
             if (ephemeral)
                 return;
@@ -180,22 +193,53 @@ namespace DiscordBlueArchiveBot.Interaction
                     if (r.Emote.Name == arrow_left.Name)
                     {
                         if (currentPage == 0)
-                            return;
+                            currentPage = lastPage;
+                        else
+                            --currentPage;
+
                         lastPageChange = DateTime.UtcNow;
-                        var toSend = await pageFunc(--currentPage).ConfigureAwait(false);
+                        var toSend = await pageFunc(currentPage).ConfigureAwait(false);
                         if (addPaginatedFooter)
-                            toSend.AddPaginatedFooter(currentPage, lastPage);
-                        await msg.ModifyAsync(x => x.Embed = toSend.Build()).ConfigureAwait(false);
+                            toSend.embedBuilder.AddPaginatedFooter(currentPage, lastPage);
+
+                        if (toSend.imageBytes != null)
+                        {
+                            toSend.embedBuilder.WithImageUrl("attachment://image.jpg");
+
+                            await msg.ModifyAsync(x =>
+                            {
+                                x.Embed = toSend.embedBuilder.Build();
+                                x.Attachments = new List<FileAttachment>() { new FileAttachment(new MemoryStream(toSend.imageBytes), "image.jpg") };
+                            }).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            await msg.ModifyAsync(x => x.Embed = toSend.embedBuilder.Build()).ConfigureAwait(false);
+                        }
                     }
                     else if (r.Emote.Name == arrow_right.Name)
                     {
-                        if (lastPage > currentPage)
+                        if (lastPage < ++currentPage)
+                            currentPage = 0;
+
+                        lastPageChange = DateTime.UtcNow;
+                        var toSend = await pageFunc(currentPage).ConfigureAwait(false);
+                        if (addPaginatedFooter)
+                            toSend.embedBuilder.AddPaginatedFooter(currentPage, lastPage);
+
+                        if (toSend.imageBytes != null)
                         {
-                            lastPageChange = DateTime.UtcNow;
-                            var toSend = await pageFunc(++currentPage).ConfigureAwait(false);
-                            if (addPaginatedFooter)
-                                toSend.AddPaginatedFooter(currentPage, lastPage);
-                            await msg.ModifyAsync(x => x.Embed = toSend.Build()).ConfigureAwait(false);
+                            toSend.embedBuilder.WithImageUrl("attachment://image.jpg");
+
+                            await msg.ModifyAsync(x =>
+                            {
+                                x.Embed = toSend.embedBuilder.Build();
+                                x.Attachments = new List<FileAttachment>() { new FileAttachment(new MemoryStream(toSend.imageBytes), "image.jpg") };
+                            }).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            await msg.ModifyAsync(x => x.Embed = toSend.embedBuilder.Build()).ConfigureAwait(false);
                         }
                     }
                 }
