@@ -140,7 +140,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
                                 reminders.TryRemove(userId, out var reminder);
 
-                                var result = await GenerateEmbedAndPictureAsync(customId[0] == "0" ? RegionType.Japan : RegionType.Global, studentsId, userId);
+                                var result = await GenerateEmbedAndPictureAsync(customId[1] == "0" ? RegionType.Japan : RegionType.Global, studentsId, userId);
                                 if (result.result)
                                 {
                                     await component.UpdateAsync((act) =>
