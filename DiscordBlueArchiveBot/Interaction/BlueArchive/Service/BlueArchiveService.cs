@@ -32,7 +32,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
         private readonly Timer _refreshTimer, _notify, _notifyCafeInviteTicketUpdateTimer;
         private readonly ConcurrentDictionary<ulong, ReminderItem> reminders = new ConcurrentDictionary<ulong, ReminderItem>();
 
-        private CommonJson _common = null;
+        private ConfigJson _config = null;
         private StagesJson _stages = null;
         private StudentsJson _students = null;
         private RaidsJson _jpRaids = null;
@@ -337,7 +337,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 JPPickUpDatas.Clear();
                 GlobalPickUpDatas.Clear();
 
-                _common = await GetDataFromServerAsync<CommonJson>();
+                _config = await GetDataFromServerAsync<ConfigJson>();
                 _stages = await GetDataFromServerAsync<StagesJson>();
                 _students = await GetDataFromServerAsync<StudentsJson>("tw");
                 _twRaids = await GetDataFromServerAsync<RaidsJson>("tw");
@@ -369,7 +369,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     }
                 }
 
-                var jpCurrentRegionsData = _common.Regions.FirstOrDefault((x) => x.Name == "Jp");
+                var jpCurrentRegionsData = _config.Regions.FirstOrDefault((x) => x.Name == "Jp");
                 if (jpCurrentRegionsData != null)
                 {
                     // 僅使用現在開放的池當Pu資料
@@ -428,7 +428,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     }
                 }
 
-                var globalCurrentRegionsData = _common.Regions.FirstOrDefault((x) => x.Name == "Global");
+                var globalCurrentRegionsData = _config.Regions.FirstOrDefault((x) => x.Name == "Global");
                 if (globalCurrentRegionsData != null)
                 {
                     foreach (var item in globalCurrentRegionsData.CurrentGacha.Where((x) => ConvertTimestampToDatetime(x.Start) <= DateTime.Now && ConvertTimestampToDatetime(x.End) > DateTime.Now))

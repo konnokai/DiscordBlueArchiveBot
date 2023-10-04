@@ -2,7 +2,7 @@
 
 namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 {
-    public class CommonJson : BaseJson
+    public class ConfigJson : BaseJson
     {
         [JsonProperty("GachaGroup")]
         public List<GachaGroup> GachaGroups { get; set; }
