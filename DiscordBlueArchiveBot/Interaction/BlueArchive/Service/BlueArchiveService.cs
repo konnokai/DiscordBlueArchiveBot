@@ -205,7 +205,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             catch (Exception ex)
             {
                 Log.Error(ex, "ButtonExecuted");
-                await component.SendErrorAsync("錯誤，請向孤之界回報此問題", true);
+                await component.SendErrorAsync("錯誤，請向孤之界回報此問題");
                 return;
             }
         }
