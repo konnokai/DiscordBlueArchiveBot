@@ -376,7 +376,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                     foreach (var item in jpCurrentRegionsData.CurrentGacha.Where((x) => ConvertTimestampToDatetime(x.Start) <= DateTime.Now && ConvertTimestampToDatetime(x.End) > DateTime.Now))
                     {
                         // 要限制只出三星的Pu不然機率會出問題
-                        JPPickUpDatas.AddRange(Students.Where((x) => item.Characters.Any((x2) => x2.Value == x.Id && x.StarGrade == 3)));
+                        JPPickUpDatas.AddRange(Students.Where((x) => item.Characters.Any((x2) => x2 == x.Id && x.StarGrade == 3)));
                     }
 
                     foreach (var item in jpCurrentRegionsData.CurrentRaid)
@@ -433,7 +433,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 {
                     foreach (var item in globalCurrentRegionsData.CurrentGacha.Where((x) => ConvertTimestampToDatetime(x.Start) <= DateTime.Now && ConvertTimestampToDatetime(x.End) > DateTime.Now))
                     {
-                        GlobalPickUpDatas.AddRange(Students.Where((x) => item.Characters.Any((x2) => x2.Value == x.Id && x.StarGrade == 3)));
+                        GlobalPickUpDatas.AddRange(Students.Where((x) => item.Characters.Any((x2) => x2 == x.Id && x.StarGrade == 3)));
                     }
 
                     foreach (var item in globalCurrentRegionsData.CurrentRaid)
