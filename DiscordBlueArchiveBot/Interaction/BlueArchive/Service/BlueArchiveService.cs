@@ -338,7 +338,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                 GlobalPickUpDatas.Clear();
 
                 _config = await GetDataFromServerAsync<ConfigJson>();
-                _stages = await GetDataFromServerAsync<StagesJson>();
+                _stages = await GetDataFromServerAsync<StagesJson>("tw");
                 _students = await GetDataFromServerAsync<StudentsJson>("tw");
                 _twRaids = await GetDataFromServerAsync<RaidsJson>("tw");
                 _twLocalizations = await GetDataFromServerAsync<LocalizationJson>("tw");

@@ -4,6 +4,11 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json
 {
     public class StagesJson : BaseJson
     {
+        public StagesJson()
+        {
+            Localization = true;
+        }
+
         [JsonProperty("Campaign")]
         public List<Campaign> Campaigns { get; set; }
 
