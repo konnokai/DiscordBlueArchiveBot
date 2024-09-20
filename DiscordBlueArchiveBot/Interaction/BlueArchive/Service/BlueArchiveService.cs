@@ -22,7 +22,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
 
         // https://kamigame.jp/bluearchive/page/240666421468632572.html#%E9%85%8D%E5%B8%83%E3%82%AD%E3%83%A3%E3%83%A9%E4%B8%80%E8%A6%A7
         public ushort[] EventStudents { get; private set; } = new ushort[] { 13004, 26006, 16006, 26008, 16008, 16009, 26007, 20004, 16010, 16011, 16007, 16012, 26009, 26010, 16013 };
-        public List<Student> Students => _students?.Data;
+        public List<Student> Students => _students.Data.Select((x) => x.Value).ToList();
         public List<Student> JPPickUpDatas { get; private set; } = new();
         public List<Student> GlobalPickUpDatas { get; private set; } = new();
         public Font JPGameFont { get; private set; }
@@ -356,7 +356,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         try
                         {
                             Log.Info($"下載 {item.Id} 的頭像");
-                            var stream = await _httpClient.GetStreamAsync($"https://schale.gg/images/student/collection/{item.Id}.webp");
+                            var stream = await _httpClient.GetStreamAsync($"https://schaledb.com/images/student/collection/{item.Id}.webp");
                             using (var img = await SixLabors.ImageSharp.Image.LoadAsync(stream))
                             {
                                 await img.SaveAsJpegAsync(GetStudentAvatarPath(item.Id));
@@ -516,7 +516,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                                 {
                                     await _client.SendMessageToDMChannelAsync(item.UserId,
                                         $"今天是 `{string.Join(", ", birthdayStudent.Select((x) => x.PersonalName))}` 的生日!",
-                                        $"https://schale.gg/images/student/collection/{birthdayStudent.First().Id}.webp");
+                                        $"https://schaledb.com/images/student/collection/{birthdayStudent.First().Id}.webp");
                                 }
                             }
                         }
@@ -647,7 +647,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
             else
             {
                 if (type.Localization) localization += "/";
-                string url = $"https://schale.gg/data/{localization}{type.Name}.min.json?v={DateTime.Now.ToFileTimeUtc()}";
+                string url = $"https://schaledb.com/data/{localization}{type.Name}.min.json?v={DateTime.Now.ToFileTimeUtc()}";
                 Log.Debug($"Load From API: {url}");
 
                 json = await _httpClient.GetStringAsync(url);
