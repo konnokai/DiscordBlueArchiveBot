@@ -392,9 +392,9 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
             List<Student> tempStudentList = _service.Students
                 .Where((x) =>
                     x.StarGrade == starGrade &&
-                    !_service.EventStudents.Any((x2) => x.Id == x2) &&
                     x.IsLimited == 0 &&
-                    (regionType == RegionType.Japan || x.IsReleased.Last()))
+                    x.IsLimited != 2 &&
+                    (regionType == RegionType.Japan || x.IsReleased[1]))
                 .ToList();
 
             return tempStudentList[RandomNumberGenerator.GetInt32(0, tempStudentList.Count)];
