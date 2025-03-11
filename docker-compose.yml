@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   discord-blue-archive-bot:
     container_name: discord-blue-archive-bot

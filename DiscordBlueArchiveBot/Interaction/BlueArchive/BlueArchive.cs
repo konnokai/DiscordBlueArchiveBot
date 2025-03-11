@@ -5,9 +5,12 @@ using DiscordBlueArchiveBot.Interaction.BlueArchive.Service;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.Fonts;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using StackExchange.Redis;
 using System.Diagnostics;
 using System.Security.Cryptography;
@@ -437,7 +440,7 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive
                 using (var image = new Image<Rgba32>(1920, 1054, new Color(new Rgb24(33, 37, 41))))
                 {
                     // https://docs.sixlabors.com/articles/imagesharp.drawing/gettingstarted.html#expanded-example-1
-                    TextOptions textOptions = new(_service.JPGameFont)
+                    RichTextOptions textOptions = new(_service.JPGameFont)
                     {
                         HorizontalAlignment = HorizontalAlignment.Center,
                         VerticalAlignment = VerticalAlignment.Center,

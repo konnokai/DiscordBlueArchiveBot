@@ -4,9 +4,11 @@ using DiscordBlueArchiveBot.DataBase.Table;
 using DiscordBlueArchiveBot.Interaction.BlueArchive.Service.Json;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.Fonts;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 using StackExchange.Redis;
 using System.Collections.Concurrent;
 using static DiscordBlueArchiveBot.DataBase.Table.NotifyConfig;
@@ -358,10 +360,8 @@ namespace DiscordBlueArchiveBot.Interaction.BlueArchive.Service
                         {
                             Log.Info($"下載 {item.Id} 的頭像");
                             var stream = await _httpClient.GetStreamAsync($"https://schaledb.com/images/student/collection/{item.Id}.webp");
-                            using (var img = await SixLabors.ImageSharp.Image.LoadAsync(stream))
-                            {
-                                await img.SaveAsJpegAsync(GetStudentAvatarPath(item.Id));
-                            }
+                            using var img = await Image.LoadAsync(stream);
+                            await img.SaveAsJpegAsync(GetStudentAvatarPath(item.Id));
                         }
                         catch (Exception ex)
                         {
